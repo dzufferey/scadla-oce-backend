@@ -1,0 +1,22 @@
+*.class
+*.log
+
+# model and G-code
+*.stl
+*.gco
+
+# sbt specific
+.cache/
+.history/
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+project/build.properties
+
+# others
+lib/
+ext/
