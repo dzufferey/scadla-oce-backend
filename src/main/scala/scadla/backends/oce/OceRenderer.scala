@@ -7,11 +7,9 @@ import squants.space.Angle
 import squants.space.Millimeters
 import org.jcae.opencascade.jni._
 
-//TODO TopoDS_Solid or TopoDS_Shape ?
-
 class OceRenderer extends RendererAux[TopoDS_Shape] {
 
-  var deviation = 1e-2
+  var deviation = 2e-2
 
   def empty: TopoDS_Shape = {
       new BRepBuilderAPI_MakeSolid().shape()
@@ -131,14 +129,20 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
       val tri = BRep_Tool.triangulation(face, loc)
       val n = tri.triangles.size / 3
       def getPoint(index: Int) = {
-        Point(Millimeters(tri.nodes()(3+index)),
-              Millimeters(tri.nodes()(3+index+1)),
-              Millimeters(tri.nodes()(3+index+2)))
+        Point(Millimeters(tri.nodes()(3*index)),
+              Millimeters(tri.nodes()(3*index+1)),
+              Millimeters(tri.nodes()(3*index+2)))
       }
       def getFace(index: Int) = {
-        Face(getPoint(tri.triangles()(3*index)),
-             getPoint(tri.triangles()(3*index+1)),
-             getPoint(tri.triangles()(3*index+2)))
+        if (face.orientation == TopAbs_Orientation.FORWARD) {
+          Face(getPoint(tri.triangles()(3*index  )),
+               getPoint(tri.triangles()(3*index+1)),
+               getPoint(tri.triangles()(3*index+2)))
+        } else {
+          Face(getPoint(tri.triangles()(3*index+1)),
+               getPoint(tri.triangles()(3*index  )),
+               getPoint(tri.triangles()(3*index+2)))
+        }
       }
       var i = 0
       while (i < n) {
