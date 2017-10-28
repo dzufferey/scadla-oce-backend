@@ -26,8 +26,6 @@ addCompilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.17")
 
 fork := true
 
-javaOptions in run += "-Djava.library.path=lib"
-
 resolvers +=  "dzufferey maven repo" at "https://github.com/dzufferey/my_mvn_repo/raw/master/repository"
 
 publishMavenStyle := true

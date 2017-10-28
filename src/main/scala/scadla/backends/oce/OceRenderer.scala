@@ -4,13 +4,18 @@ import scadla._
 import scadla.backends.RendererAux
 import squants.space.Length
 import squants.space.Angle
+import squants.space.Millimeters
 import org.jcae.opencascade.jni._
 
 //TODO TopoDS_Solid or TopoDS_Shape ?
 
 class OceRenderer extends RendererAux[TopoDS_Shape] {
 
-  def empty: TopoDS_Shape = ???
+  var deviation = 1e-2
+
+  def empty: TopoDS_Shape = {
+      new BRepBuilderAPI_MakeSolid().shape()
+  }
 
   def union(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
     if (objs.length == 0) {
@@ -36,11 +41,18 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     negs.foldLeft(pos)( (p,n) => new BRepAlgoAPI_Cut(p, n).shape() )
   }
 
-  def minkowski(objs: Seq[TopoDS_Shape]): TopoDS_Shape = ???
+  def minkowski(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
+    sys.error("oce backend does not support minkowski sum")
+  }
 
-  def hull(objs: Seq[TopoDS_Shape]): TopoDS_Shape = ???
+  def hull(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
+    sys.error("oce backend does not support convex hull")
+  }
 
-  def polyhedron(p: Polyhedron): TopoDS_Shape = ???
+  def polyhedron(p: Polyhedron): TopoDS_Shape = {
+    //TODO identify the connected components (one solid per component)
+    ???
+  }
 
   def cube(width: Length, depth: Length, height: Length): TopoDS_Shape = {
     val lowerLeft = Array[Double](0.0, 0.0, 0.0)
@@ -70,10 +82,74 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     }
   }
 
-  def fromFile(path: String, format: String): TopoDS_Shape = ???
+  def fromFile(path: String, format: String): TopoDS_Shape = format.toLowerCase match {
+    case "stl" | "obj" | "amf" =>
+      val poly = FromFile(path, format).load
+      polyhedron(poly)
+    case "brep" | "brp" =>
+      BRepTools.read(path, new BRep_Builder())
+    case "iges" | "igs" =>
+      // https://dev.opencascade.org/doc/overview/html/occt_user_guides__iges.html
+      val reader = new IGESControl_Reader
+      reader.readFile(path.getBytes())
+      reader.nbRootsForTransfer
+      reader.transferRoots
+      val result = reader.oneShape
+      if (result == null) empty
+      else result
+    case "step" | "stp" =>
+      // https://dev.opencascade.org/doc/overview/html/occt_user_guides__step.html
+      val reader = new STEPControl_Reader
+      reader.readFile(path.getBytes())
+      reader.nbRootsForTransfer
+      reader.transferRoots
+      val result = reader.oneShape
+      if (result == null) empty
+      else result
+    case _ => 
+      sys.error("format '" + format + "' not supported")
+  }
 
-  def multiply(m: Matrix, obj: TopoDS_Shape): TopoDS_Shape = ???
+  def multiply(m: Matrix, obj: TopoDS_Shape): TopoDS_Shape = {
+    val trsf = new GP_Trsf
+    trsf.setValues(m.m00, m.m01, m.m02, m.m03,
+                   m.m10, m.m11, m.m12, m.m13,
+                   m.m20, m.m21, m.m22, m.m23)
+    assert(m.m30 == 0.0 && m.m31 == 0.0 && m.m32 == 0.0 && m.m33 == 1.0)
+    new BRepBuilderAPI_Transform(obj, trsf).shape
+  }
 
-  def toMesh(aux: TopoDS_Shape): Polyhedron = ???
+
+  def toMesh(shape: TopoDS_Shape): Polyhedron = {
+    BRepTools.clean(shape)
+    val mesher = new BRepMesh_IncrementalMesh(shape, deviation)
+    val explorer = new TopExp_Explorer(shape, TopAbs_ShapeEnum.FACE);
+    val builder = Seq.newBuilder[Face]
+    while(explorer.more) {
+      val face = explorer.current.asInstanceOf[TopoDS_Face]
+      val loc = new TopLoc_Location
+      val tri = BRep_Tool.triangulation(face, loc)
+      val n = tri.triangles.size / 3
+      def getPoint(index: Int) = {
+        Point(Millimeters(tri.nodes()(3+index)),
+              Millimeters(tri.nodes()(3+index+1)),
+              Millimeters(tri.nodes()(3+index+2)))
+      }
+      def getFace(index: Int) = {
+        Face(getPoint(tri.triangles()(3*index)),
+             getPoint(tri.triangles()(3*index+1)),
+             getPoint(tri.triangles()(3*index+2)))
+      }
+      var i = 0
+      while (i < n) {
+        builder += getFace(i)
+        i += 1
+      }
+      explorer.next
+    }
+    Polyhedron(builder.result)
+  }
+
+  //TODO save brep, iges, step
 
 }
