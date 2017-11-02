@@ -48,8 +48,46 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
   }
 
   def polyhedron(p: Polyhedron): TopoDS_Shape = {
-    //TODO identify the connected components (one solid per component)
-    ???
+    if (p.faces.isEmpty) {
+      empty
+    } else {
+      //TODO identify the connected components (one solid per component)
+      val (points, faces) = p.indexed 
+      val vertices = points.map{ case Point(x,y,z) =>
+        val a = Array[Double](x.toMillimeters, y.toMillimeters, z.toMillimeters)
+        new BRepBuilderAPI_MakeVertex(a).shape().asInstanceOf[TopoDS_Vertex]
+      }
+      val edges = scala.collection.mutable.Map[(Int,Int), TopoDS_Edge]()
+      def getEdge(i: Int, j: Int) = {
+        if (edges contains (i -> j)) {
+          edges(i -> j)
+        } else {
+          val b = new BRepBuilderAPI_MakeEdge(vertices(i), vertices(j))
+          val e = b.shape.asInstanceOf[TopoDS_Edge]
+          edges(i -> j) = e
+          e
+        }
+      }
+      val sewist = new BRepBuilderAPI_Sewing
+      faces.foreach{ case (a,b,c) =>
+        val e1 = getEdge(a,b)
+        val e2 = getEdge(b,c)
+        val e3 = getEdge(c,a)
+        val w = new BRepBuilderAPI_MakeWire(e1, e2, e3).shape.asInstanceOf[TopoDS_Wire]
+        val f = new BRepBuilderAPI_MakeFace(w).shape.asInstanceOf[TopoDS_Face]
+        sewist.add(f)
+      }
+      sewist.perform
+      val s = sewist.sewedShape
+      s.shapeType match {
+        case TopAbs_ShapeEnum.SHELL =>
+          new BRepBuilderAPI_MakeSolid(s.asInstanceOf[TopoDS_Shell]).shape
+        case TopAbs_ShapeEnum.SOLID | TopAbs_ShapeEnum.COMPSOLID | TopAbs_ShapeEnum.COMPOUND =>
+          s
+        case _ =>
+          sys.error("unexpected shape:" + s)
+      }
+    }
   }
 
   def cube(width: Length, depth: Length, height: Length): TopoDS_Shape = {
