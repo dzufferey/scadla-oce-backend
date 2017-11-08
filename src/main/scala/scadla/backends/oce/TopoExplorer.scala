@@ -11,7 +11,7 @@ object TopoExplorer {
       it.next
       v
     }
-    def hasNext =  it.more()
+    def hasNext = it.more()
   }
 
   def vertices(shape: TopoDS_Shape) = new Iterator[TopoDS_Vertex] {
@@ -21,7 +21,7 @@ object TopoExplorer {
       it.next
       v
     }
-    def hasNext =  it.more
+    def hasNext = it.more
   }
 
   def edges(shape: TopoDS_Shape) = new Iterator[TopoDS_Edge] {
