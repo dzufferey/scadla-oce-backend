@@ -159,10 +159,10 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
   def toMesh(shape: TopoDS_Shape): Polyhedron = {
     BRepTools.clean(shape)
     val mesher = new BRepMesh_IncrementalMesh(shape, deviation)
-    val explorer = new TopExp_Explorer(shape, TopAbs_ShapeEnum.FACE);
     val builder = Seq.newBuilder[Face]
-    while(explorer.more) {
-      val face = explorer.current.asInstanceOf[TopoDS_Face]
+    val explorer = TopoExplorerUnique.faces(shape)
+    while(explorer.hasNext) {
+      val face = explorer.next
       val loc = new TopLoc_Location
       val tri = BRep_Tool.triangulation(face, loc)
       val n = tri.triangles.size / 3
@@ -187,7 +187,6 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
         builder += getFace(i)
         i += 1
       }
-      explorer.next
     }
     Polyhedron(builder.result)
   }
