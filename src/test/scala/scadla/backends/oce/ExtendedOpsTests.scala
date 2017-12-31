@@ -104,6 +104,8 @@ class ExtendedOpsTest extends FunSuite {
       if (e.isUmbilic) {
         assert(e.meanCurvature() ≈ (0 mm))
         assert(e.normal() == Vector.z)
+        assert(e.normal(Point(0 mm, 0 mm, 0 mm)).get == Vector.z)
+        assert(e.nearestPoint(Point(0 mm, 0 mm, -5 mm)) == Point(0 mm, 0 mm, 0 mm))
       } else {
         val n = e.normal()
         assert(n.x ≈ (-math.sqrt(2)/2 mm))

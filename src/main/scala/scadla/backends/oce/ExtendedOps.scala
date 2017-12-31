@@ -30,8 +30,8 @@ object ExtendedOps {
     }
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Edge] = {
-      TopoExplorer.edges(shape).filter(edge => {
-        TopoExplorer.vertices(edge).contains(lhs)
+      TopoExplorerUnique.edges(shape).filter(edge => {
+        TopoExplorerUnique.vertices(edge).contains(lhs)
       })
     }
 
@@ -40,13 +40,13 @@ object ExtendedOps {
   implicit class EdgeOps(lhs: TopoDS_Edge) {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Wire] = {
-      TopoExplorer.wires(shape).filter(wire => {
-        TopoExplorer.edges(wire).contains(lhs)
+      TopoExplorerUnique.wires(shape).filter(wire => {
+        TopoExplorerUnique.edges(wire).contains(lhs)
       })
     }
 
     def children: Iterator[TopoDS_Vertex] = {
-      TopoExplorer.vertices(lhs)
+      TopoExplorerUnique.vertices(lhs)
     }
 
     def length: Length = {
@@ -65,7 +65,7 @@ object ExtendedOps {
       if (curve != null) {
         curve.isClosed()
       } else {
-        sys.error("edge is degenerate of curve on surface ...")
+        sys.error("edge is degenerate or we need curve on surface ...")
       }
     }
 
@@ -74,13 +74,13 @@ object ExtendedOps {
   implicit class WireOps(lhs: TopoDS_Wire) {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Face] = {
-      TopoExplorer.faces(shape).filter(face => {
-        TopoExplorer.wires(face).contains(lhs)
+      TopoExplorerUnique.faces(shape).filter(face => {
+        TopoExplorerUnique.wires(face).contains(lhs)
       })
     }
 
     def children: Iterator[TopoDS_Edge] = {
-      TopoExplorer.edges(lhs)
+      TopoExplorerUnique.edges(lhs)
     }
 
     def length: Length = {
@@ -94,13 +94,13 @@ object ExtendedOps {
   implicit class FaceOps(lhs: TopoDS_Face) {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Shell] = {
-      TopoExplorer.shells(shape).filter(s => {
-        TopoExplorer.faces(s).contains(lhs)
+      TopoExplorerUnique.shells(shape).filter(s => {
+        TopoExplorerUnique.faces(s).contains(lhs)
       })
     }
 
     def children: Iterator[TopoDS_Wire] = {
-      TopoExplorer.wires(lhs)
+      TopoExplorerUnique.wires(lhs)
     }
 
     def area: Area = {
@@ -155,18 +155,40 @@ object ExtendedOps {
       Vector(n(0), n(1), n(2), Millimeters)
     }
 
+    def normal(pnt: Point)(implicit tolerance: Length): Option[Vector] = {
+      val s = BRep_Tool.surface(lhs)
+      val p = Array[Double](pnt.x.toMillimeters, pnt.y.toMillimeters, pnt.z.toMillimeters)
+      val proj = new GeomAPI_ProjectPointOnSurf(p, s)
+      if (proj.lowerDistance < tolerance.toMillimeters) {
+        val u = Array[Double](0.0)
+        val v = Array[Double](0.0)
+        proj.lowerDistanceParameters(u, v);
+        Some(normal(u(0), v(0))(tolerance))
+      } else {
+        None
+      }
+    }
+
+    def nearestPoint(pnt: Point): Point = {
+      val s = BRep_Tool.surface(lhs)
+      val p = Array[Double](pnt.x.toMillimeters, pnt.y.toMillimeters, pnt.z.toMillimeters)
+      val proj = new GeomAPI_ProjectPointOnSurf(p, s)
+      val p2 = proj.nearestPoint
+      Point(Millimeters(p2(0)), Millimeters(p2(1)), Millimeters(p2(2)))
+    }
+
   }
 
   implicit class ShellOps(lhs: TopoDS_Shell) {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Solid] = {
-      TopoExplorer.solids(shape).filter(s => {
-        TopoExplorer.shells(s).contains(lhs)
+      TopoExplorerUnique.solids(shape).filter(s => {
+        TopoExplorerUnique.shells(s).contains(lhs)
       })
     }
 
     def children: Iterator[TopoDS_Face] = {
-      TopoExplorer.faces(lhs)
+      TopoExplorerUnique.faces(lhs)
     }
 
     def area: Area = {
@@ -180,13 +202,13 @@ object ExtendedOps {
   implicit class SolidOps(lhs: TopoDS_Solid) {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_CompSolid] = {
-      TopoExplorer.compSolids(shape).filter(comp => {
-        TopoExplorer.solids(comp).contains(lhs)
+      TopoExplorerUnique.compSolids(shape).filter(comp => {
+        TopoExplorerUnique.solids(comp).contains(lhs)
       })
     }
 
     def children: Iterator[TopoDS_Wire] = {
-      TopoExplorer.wires(lhs)
+      TopoExplorerUnique.wires(lhs)
     }
 
     def volume: Volume = {
