@@ -55,6 +55,20 @@ object ExtendedOps {
       Millimeters(prop.mass)
     }
 
+    def isDegenerate: Boolean = {
+      BRep_Tool.degenerated(lhs)
+    }
+
+    def isClosed: Boolean = {
+      val bounds = Array[Double](0, 0)
+      val curve = BRep_Tool.curve(lhs, bounds)
+      if (curve != null) {
+        curve.isClosed()
+      } else {
+        sys.error("edge is degenerate of curve on surface ...")
+      }
+    }
+
   }
 
   implicit class WireOps(lhs: TopoDS_Wire) {
@@ -93,6 +107,52 @@ object ExtendedOps {
       val prop = new GProp_GProps()
       BRepGProp.surfaceProperties(lhs, prop)
       Millimeters(1) * Millimeters(prop.mass)
+    }
+
+    def isPlane: Boolean = {
+      val s = BRep_Tool.surface(lhs)
+      s.isInstanceOf[Geom_Plane]
+    }
+
+    protected def getPropsAt(u: Double, v: Double, degree: Int, tolerance: Length) = {
+      val s = BRep_Tool.surface(lhs)
+      val props = new GeomLProp_SLProps(degree, tolerance.toMillimeters)
+      props.setSurface(s)
+      //scale UV
+      val bounds = Array.ofDim[Double](4)
+      s.bounds(bounds)
+      val uMin = bounds(0)
+      val uMax = bounds(1)
+      val vMin = bounds(2)
+      val vMax = bounds(3)
+      props.setParameters(uMin + (uMax - uMin) * u, vMin + (vMax - vMin) * v)
+      props
+    }
+
+    def isUmbilic(implicit tolerance: Length): Boolean = {
+      val props = getPropsAt(0.5, 0.5, 2, tolerance)
+      props.isUmbilic
+    }
+
+    def isCurvatureDefined(u: Double = 0.5, v: Double = 0.5)(implicit tolerance: Length): Boolean = {
+      val props = getPropsAt(u, v, 2, tolerance)
+      props.isCurvatureDefined
+    }
+
+    def meanCurvature(u: Double = 0.5, v: Double = 0.5)(implicit tolerance: Length): Length = {
+      val props = getPropsAt(u, v, 2, tolerance)
+      Millimeters(props.meanCurvature)
+    }
+
+    def gaussianCurvature(u: Double = 0.5, v: Double = 0.5)(implicit tolerance: Length): Length = {
+      val props = getPropsAt(u, v, 2, tolerance)
+      Millimeters(props.gaussianCurvature)
+    }
+
+    def normal(u: Double = 0.5, v: Double = 0.5)(implicit tolerance: Length): Vector = {
+      val props = getPropsAt(u, v, 2, tolerance)
+      val n = props.normal()
+      Vector(n(0), n(1), n(2), Millimeters)
     }
 
   }

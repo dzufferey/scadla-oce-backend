@@ -14,85 +14,29 @@ object TopoExplorer {
     def hasNext = it.more()
   }
 
-  def vertices(shape: TopoDS_Shape) = new Iterator[TopoDS_Vertex] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.VERTEX)
+  private class TopoIterator[T <: TopoDS_Shape](shape: TopoDS_Shape, kind: TopAbs_ShapeEnum) extends Iterator[T] {
+    protected val it = new TopExp_Explorer(shape, kind)
     def next = {
-      val v = it.current.asInstanceOf[TopoDS_Vertex]
+      val v = it.current.asInstanceOf[T]
       it.next
       v
     }
     def hasNext = it.more
   }
 
-  def edges(shape: TopoDS_Shape) = new Iterator[TopoDS_Edge] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.EDGE)
-    def next = {
-      val v = it.current.asInstanceOf[TopoDS_Edge]
-      it.next
-      v
-    }
-    def hasNext = it.more
-  }
+  def vertices(shape: TopoDS_Shape): Iterator[TopoDS_Vertex] = new TopoIterator[TopoDS_Vertex](shape, TopAbs_ShapeEnum.VERTEX)
 
-  def wires(shape: TopoDS_Shape) = new Iterator[TopoDS_Wire] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.WIRE)
-    def next = {
-      val v = it.current.asInstanceOf[TopoDS_Wire]
-      it.next
-      v
-    }
-    def hasNext = it.more
-  }
+  def edges(shape: TopoDS_Shape): Iterator[TopoDS_Edge] = new TopoIterator[TopoDS_Edge](shape, TopAbs_ShapeEnum.EDGE)
 
-  def faces(shape: TopoDS_Shape) = new Iterator[TopoDS_Face] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.FACE)
-    def next = {
-      val v = it.current.asInstanceOf[TopoDS_Face]
-      it.next
-      v
-    }
-    def hasNext = it.more
-  }
+  def wires(shape: TopoDS_Shape): Iterator[TopoDS_Wire] = new TopoIterator[TopoDS_Wire](shape, TopAbs_ShapeEnum.WIRE)
 
-  def shells(shape: TopoDS_Shape) = new Iterator[TopoDS_Shell] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.SHELL)
-    def next = {
-      val v = it.current.asInstanceOf[TopoDS_Shell]
-      it.next
-      v
-    }
-    def hasNext = it.more
-  }
+  def faces(shape: TopoDS_Shape): Iterator[TopoDS_Face] = new TopoIterator[TopoDS_Face](shape, TopAbs_ShapeEnum.FACE)
 
-  def solids(shape: TopoDS_Shape) = new Iterator[TopoDS_Solid] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.SOLID)
-    def next = {
-      val v = it.current.asInstanceOf[TopoDS_Solid]
-      it.next
-      v
-    }
-    def hasNext = it.more
-  }
+  def shells(shape: TopoDS_Shape): Iterator[TopoDS_Shell] = new TopoIterator[TopoDS_Shell](shape, TopAbs_ShapeEnum.SHELL)
 
-  def compSolids(shape: TopoDS_Shape) = new Iterator[TopoDS_CompSolid] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.COMPSOLID)
-    def next = {
-      val v = it.current.asInstanceOf[TopoDS_CompSolid]
-      it.next
-      v
-    }
-    def hasNext = it.more
-  }
+  def solids(shape: TopoDS_Shape): Iterator[TopoDS_Solid] = new TopoIterator[TopoDS_Solid](shape, TopAbs_ShapeEnum.SOLID)
 
-  def compounds(shape: TopoDS_Shape) = new Iterator[TopoDS_Compound] {
-    protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.COMPOUND)
-    def next = {
-      val v = it.current.asInstanceOf[TopoDS_Compound]
-      it.next
-      v
-    }
-    def hasNext = it.more
-  }
+  def compSolids(shape: TopoDS_Shape): Iterator[TopoDS_CompSolid] = new TopoIterator[TopoDS_CompSolid](shape, TopAbs_ShapeEnum.COMPSOLID)
 
 }
 
