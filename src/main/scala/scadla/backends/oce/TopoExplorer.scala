@@ -84,7 +84,7 @@ object TopoExplorer {
     def hasNext = it.more
   }
 
-  def compound(shape: TopoDS_Shape) = new Iterator[TopoDS_Compound] {
+  def compounds(shape: TopoDS_Shape) = new Iterator[TopoDS_Compound] {
     protected val it = new TopExp_Explorer(shape, TopAbs_ShapeEnum.COMPOUND)
     def next = {
       val v = it.current.asInstanceOf[TopoDS_Compound]
