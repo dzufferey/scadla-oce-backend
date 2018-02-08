@@ -11,41 +11,17 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
 
   var deviation = 2e-2
 
-  def empty: TopoDS_Shape = {
-      new BRepBuilderAPI_MakeSolid().shape()
+  def shape(s: Shape): TopoDS_Shape = s match {
+    case Empty => empty
+    case Cube(x,y,z) => cube(x,y,z)
+    case Sphere(r) => sphere(r)
+    case Cylinder(top, bot, height) => cylinder(top, bot, height)
+    case p @ Polyhedron(_) => polyhedron(p)
+    case FromFile(name, format) => fromFile(name, format)
+    case s => sys.error("oce backend does not support " + s)
   }
 
-  def union(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
-    if (objs.length == 0) {
-      empty
-    } else if (objs.length == 1) {
-      objs.head
-    } else {
-      objs.reduceLeft( (x,y) => new BRepAlgoAPI_Fuse(x, y).shape() )
-    }
-  }
-
-  def intersection(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
-    if (objs.length == 0) {
-      empty
-    } else if (objs.length == 1) {
-      objs.head
-    } else {
-      objs.reduceLeft( (x,y) => new BRepAlgoAPI_Common(x, y).shape() )
-    }
-  }
-
-  def difference(pos: TopoDS_Shape, negs: Seq[TopoDS_Shape]): TopoDS_Shape = {
-    negs.foldLeft(pos)( (p,n) => new BRepAlgoAPI_Cut(p, n).shape() )
-  }
-
-  def minkowski(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
-    sys.error("oce backend does not support minkowski sum")
-  }
-
-  def hull(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
-    sys.error("oce backend does not support convex hull")
-  }
+  def empty = new BRepBuilderAPI_MakeSolid().shape()
 
   def polyhedron(p: Polyhedron): TopoDS_Shape = {
     if (p.faces.isEmpty) {
@@ -146,7 +122,40 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
       sys.error("format '" + format + "' not supported")
   }
 
-  def multiply(m: Matrix, obj: TopoDS_Shape): TopoDS_Shape = {
+  def operation(o: Operation, args: Seq[TopoDS_Shape]): TopoDS_Shape = o match {
+    case Union(_) => union(args)
+    case Intersection(_) => intersection(args)
+    case Difference(_, _) => difference(args.head, args.tail)
+    case o => sys.error("oce backend does not support " + o)
+  }
+
+  def union(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
+    if (objs.length == 0) {
+      empty
+    } else if (objs.length == 1) {
+      objs.head
+    } else {
+      objs.reduceLeft( (x,y) => new BRepAlgoAPI_Fuse(x, y).shape() )
+    }
+  }
+
+  def intersection(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
+    if (objs.length == 0) {
+      empty
+    } else if (objs.length == 1) {
+      objs.head
+    } else {
+      objs.reduceLeft( (x,y) => new BRepAlgoAPI_Common(x, y).shape() )
+    }
+  }
+
+  def difference(pos: TopoDS_Shape, negs: Seq[TopoDS_Shape]): TopoDS_Shape = {
+    negs.foldLeft(pos)( (p,n) => new BRepAlgoAPI_Cut(p, n).shape() )
+  }
+
+
+  def transform(t: Transform, obj: TopoDS_Shape) = {
+    val m = t.matrix
     val trsf = new GP_Trsf
     trsf.setValues(m.m00, m.m01, m.m02, m.m03,
                    m.m10, m.m11, m.m12, m.m13,
