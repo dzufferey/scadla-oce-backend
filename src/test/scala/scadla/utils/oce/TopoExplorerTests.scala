@@ -1,8 +1,8 @@
-package scadla.backends.oce
+package scadla.utils.oce
 
 import org.scalatest._
 import org.jcae.opencascade.jni._
-import TestCommon._
+import scadla.OceTestCommon._
 
 class TopoExplorerTest extends FunSuite {
 

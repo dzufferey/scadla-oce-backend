@@ -1,7 +1,8 @@
-package scadla.backends.oce
+package scadla.utils.oce
 
 import scadla._
 import scadla.backends.Viewer
+import scadla.backends.oce.OceRenderer
 import scadla.utils.CenteredCube
 import org.jcae.opencascade.jni._
 import org.scalatest._

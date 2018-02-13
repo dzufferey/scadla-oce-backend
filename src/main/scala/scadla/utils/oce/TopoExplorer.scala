@@ -1,4 +1,4 @@
-package scadla.backends.oce
+package scadla.utils.oce
 
 import org.jcae.opencascade.jni._
 

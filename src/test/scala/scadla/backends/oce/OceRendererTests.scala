@@ -6,6 +6,7 @@ import scadla.utils.CenteredCube
 import org.scalatest._
 import squants.space.Length
 import scadla.EverythingIsIn.{millimeters, radians}
+import org.jcae.opencascade.jni._
 
 class OceRendererTest extends FunSuite {
 
@@ -46,6 +47,12 @@ class OceRendererTest extends FunSuite {
         Rotate(0, math.Pi/2, 0, c)
       )
     }
+    renderAndShow(tree)
+  }
+*/
+/*
+  test("test 02") {
+    val tree = Fillet(Cube(1,1,1), 0.2, (_: TopoDS_Edge) => true)
     renderAndShow(tree)
   }
 */

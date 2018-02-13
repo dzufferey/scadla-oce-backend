@@ -1,4 +1,4 @@
-package scadla.backends.oce
+package scadla.utils.oce
 
 import org.scalatest._
 import scadla._
@@ -8,7 +8,7 @@ import squants.space.Length
 import scala.language.postfixOps
 import squants.space.LengthConversions._
 import scadla.EverythingIsIn.{millimeters, radians}
-import TestCommon._
+import OceTestCommon._
 
 class ExtendedOpsTest extends FunSuite {
 

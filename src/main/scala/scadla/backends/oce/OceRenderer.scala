@@ -1,6 +1,7 @@
 package scadla.backends.oce
 
 import scadla._
+import scadla.utils.oce.TopoExplorerUnique
 import scadla.backends.RendererAux
 import squants.space.Length
 import squants.space.Angle
@@ -11,6 +12,15 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
 
   var deviation = 2e-2
 
+  override def isSupported(s: Solid): Boolean = s match {
+    case OceShape(_) => true
+    case s: Shape => super.isSupported(s)
+    case t: Transform => isSupported(t.child)
+    case Fillet(s, _) => isSupported(s)
+    case o: Operation => super.isSupported(o)
+    case _ => false
+  }
+
   def shape(s: Shape): TopoDS_Shape = s match {
     case Empty => empty
     case Cube(x,y,z) => cube(x,y,z)
@@ -18,6 +28,7 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     case Cylinder(top, bot, height) => cylinder(top, bot, height)
     case p @ Polyhedron(_) => polyhedron(p)
     case FromFile(name, format) => fromFile(name, format)
+    case OceShape(s) => s
     case s => sys.error("oce backend does not support " + s)
   }
 
@@ -126,6 +137,7 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     case Union(_) => union(args)
     case Intersection(_) => intersection(args)
     case Difference(_, _) => difference(args.head, args.tail)
+    case Fillet(_, select) => utils.oce.Fillet(args.head, select)
     case o => sys.error("oce backend does not support " + o)
   }
 

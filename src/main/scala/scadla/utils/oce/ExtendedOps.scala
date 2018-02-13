@@ -1,4 +1,4 @@
-package scadla.backends.oce
+package scadla.utils.oce
 
 import scadla._
 import squants.space.{Length, Angle, Area, Volume}

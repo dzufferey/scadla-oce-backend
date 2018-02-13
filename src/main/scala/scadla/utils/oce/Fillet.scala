@@ -1,11 +1,11 @@
-package scadla.backends.oce
+package scadla.utils.oce
 
 import scadla._
 import squants.space.{Length, Angle}
 import squants.space.Millimeters
 import org.jcae.opencascade.jni._
 
-class Fillet(solid: TopoDS_Solid) {
+class Fillet(solid: TopoDS_Shape) {
 
   protected val mf = new BRepFilletAPI_MakeFillet(solid)
 
@@ -17,7 +17,7 @@ class Fillet(solid: TopoDS_Solid) {
 
 object Fillet {
 
-  def apply(solid: TopoDS_Solid, filter: TopoDS_Edge => Option[Length]) = {
+  def apply(solid: TopoDS_Shape, filter: TopoDS_Edge => Option[Length]) = {
     val mf = new Fillet(solid)
     for (e <- TopoExplorerUnique.edges(solid);
          l <- filter(e)) {

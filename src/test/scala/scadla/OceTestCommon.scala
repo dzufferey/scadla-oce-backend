@@ -1,4 +1,4 @@
-package scadla.backends.oce
+package scadla
 
 import scadla._
 import org.jcae.opencascade.jni._
@@ -6,7 +6,7 @@ import squants.space.Length
 import scala.language.postfixOps
 import squants.space.LengthConversions._
 
-object TestCommon {
+object OceTestCommon {
   
   implicit val toleranceL = 1e-10 mm
   implicit val toleranceS = (1e-10 mm) * (1 mm)
