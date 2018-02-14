@@ -17,6 +17,7 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     case s: Shape => super.isSupported(s)
     case t: Transform => isSupported(t.child)
     case Fillet(s, _) => isSupported(s)
+    case Chamfer(s, _) => isSupported(s)
     case o: Operation => super.isSupported(o)
     case _ => false
   }
@@ -138,6 +139,7 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     case Intersection(_) => intersection(args)
     case Difference(_, _) => difference(args.head, args.tail)
     case Fillet(_, select) => utils.oce.Fillet(args.head, select)
+    case Chamfer(_, select) => utils.oce.Chamfer(args.head, select)
     case o => sys.error("oce backend does not support " + o)
   }
 

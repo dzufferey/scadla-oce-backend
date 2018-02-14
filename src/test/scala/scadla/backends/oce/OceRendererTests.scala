@@ -56,4 +56,10 @@ class OceRendererTest extends FunSuite {
     renderAndShow(tree)
   }
 */
+/*
+  test("test 03") {
+    val tree = Chamfer(Cube(1,1,1), 0.2, (_: TopoDS_Face, _: TopoDS_Edge) => true)
+    renderAndShow(tree)
+  }
+*/
 }

@@ -1,6 +1,5 @@
 package scadla.utils.oce
 
-import scadla._
 import squants.space.{Length, Angle}
 import squants.space.Millimeters
 import org.jcae.opencascade.jni._
