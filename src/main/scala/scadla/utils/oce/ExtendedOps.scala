@@ -60,6 +60,8 @@ object ExtendedOps {
     }
 
     def isClosed: Boolean = {
+      children.length == 1
+      /*
       val bounds = Array[Double](0, 0)
       val curve = BRep_Tool.curve(lhs, bounds)
       if (curve != null) {
@@ -67,6 +69,7 @@ object ExtendedOps {
       } else {
         sys.error("edge is degenerate or we need curve on surface ...")
       }
+      */
     }
 
   }

@@ -1,8 +1,10 @@
 package scadla.backends.oce
 
 import scadla._
+import scadla.InlineOps._
 import scadla.backends.Viewer
 import scadla.utils.CenteredCube
+import scadla.utils.oce.ExtendedOps._
 import org.scalatest._
 import squants.space.Length
 import scadla.EverythingIsIn.{millimeters, radians}
@@ -31,21 +33,11 @@ class OceRendererTest extends FunSuite {
 
 /*
   test("test 01") {
-    //val tree = Cube(1,1,1)
-    //val tree = Sphere(4)
-    //val tree = Cylinder(1.0, 5.0, 5.0)
-    //val tree = Intersection(Sphere(5.0), Cylinder(1.0, 5.0, 5.0))
     val tree = {
+      val center = CenteredCube(5.0,5.0,5.0) * Sphere(2.0)
       val c = Translate(0,0,-3, Cylinder(1.0, 6.0))
-      Difference(
-        Intersection(
-            CenteredCube(5.0,5.0,5.0),
-            Sphere(2.0)
-        ),
-        c,
-        Rotate(math.Pi/2, 0, 0, c),
-        Rotate(0, math.Pi/2, 0, c)
-      )
+      val carved = center - c - c.rotateX(math.Pi/2) - c.rotateY(math.Pi/2)
+      Fillet(carved, 0.1, _.isClosed)
     }
     renderAndShow(tree)
   }

@@ -53,10 +53,12 @@ class ExtendedOpsTest extends FunSuite {
     for (e <- TopoExplorer.edges(box)) {
       assert(!e.isClosed)
     }
+    /*
     val sphere = getSphere()
     for (e <- TopoExplorer.edges(sphere)) {
       assert(e.isDegenerate || e.isClosed)
     }
+    */
     val cone = getCone()
     var open = 0
     var closed = 0

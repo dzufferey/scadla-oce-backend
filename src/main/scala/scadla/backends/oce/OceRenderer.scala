@@ -135,9 +135,9 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
   }
 
   def operation(o: Operation, args: Seq[TopoDS_Shape]): TopoDS_Shape = o match {
-    case Union(_) => union(args)
-    case Intersection(_) => intersection(args)
-    case Difference(_, _) => difference(args.head, args.tail)
+    case _: Union => union(args)
+    case _: Intersection => intersection(args)
+    case _: Difference => difference(args.head, args.tail)
     case Fillet(_, select) => utils.oce.Fillet(args.head, select)
     case Chamfer(_, select) => utils.oce.Chamfer(args.head, select)
     case o => sys.error("oce backend does not support " + o)
