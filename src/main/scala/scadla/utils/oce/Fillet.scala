@@ -16,10 +16,10 @@ class Fillet(solid: TopoDS_Shape) {
 
 object Fillet {
 
-  def apply(solid: TopoDS_Shape, filter: TopoDS_Edge => Option[Length]) = {
+  def apply(solid: TopoDS_Shape, filter: (TopoDS_Shape, TopoDS_Edge) => Option[Length]) = {
     val mf = new Fillet(solid)
     for (e <- TopoExplorerUnique.edges(solid);
-         l <- filter(e)) {
+         l <- filter(solid,e)) {
       mf.add(l, e)
     }
     mf.result

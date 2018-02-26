@@ -18,7 +18,7 @@ class FilletTest extends FunSuite {
     val r = new OceRenderer
     val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
     assert(new BRepCheck_Analyzer(shape).isValid)
-    val shapeWithFillet = Fillet(shape, edge => Some(0.2 mm))
+    val shapeWithFillet = Fillet(shape, (solid,edge) => Some(0.2 mm))
     assert(new BRepCheck_Analyzer(shapeWithFillet).isValid)
     //val obj = r.toMesh(shapeWithFillet)
     //Viewer.default(obj)
@@ -29,7 +29,7 @@ class FilletTest extends FunSuite {
     val r = new OceRenderer
     val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
     assert(new BRepCheck_Analyzer(shape).isValid)
-    val shapeWithFillet = Fillet(shape, edge => Some(0.2 mm))
+    val shapeWithFillet = Fillet(shape, (solid,edge) => Some(0.2 mm))
     assert(new BRepCheck_Analyzer(shapeWithFillet).isValid)
     //val obj = r.toMesh(shapeWithFillet)
     //Viewer.default(obj)
@@ -41,7 +41,7 @@ class FilletTest extends FunSuite {
 //  val r = new OceRenderer
 //  val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
 //  assert(new BRepCheck_Analyzer(shape).isValid)
-//  val shapeWithFillet = Fillet(shape, edge => Some(0.2 mm))
+//  val shapeWithFillet = Fillet(shape, (solid,edge) => Some(0.2 mm))
 //  assert(new BRepCheck_Analyzer(shapeWithFillet).isValid)
 //  val obj = r.toMesh(shapeWithFillet)
 //  Viewer.default(obj)
