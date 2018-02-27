@@ -18,22 +18,35 @@ class Chamfer(solid: TopoDS_Shape) {
 
 object Chamfer {
   
-  def apply(solid: TopoDS_Shape, filter: (TopoDS_Shape, TopoDS_Face, TopoDS_Edge) => Option[Length]) = {
+  def apply(solid: TopoDS_Shape, filter: (TopoDS_Face, TopoDS_Edge) => Option[Length]) = {
     val mf = new Chamfer(solid)
     for (f <- TopoExplorerUnique.faces(solid);
          e <- TopoExplorerUnique.edges(f);
-         l <- filter(solid,f,e)) {
+         l <- filter(f,e)) {
       mf.add(f, e, l)
     }
     mf.result
   }
 
-  def apply(solid: TopoDS_Shape, filter: TopoDS_Face => Iterable[(TopoDS_Edge, Length)]) = {
+  def wire(solid: TopoDS_Shape, filter: (TopoDS_Face, TopoDS_Wire) => Option[Length]) = {
     val mf = new Chamfer(solid)
     for (f <- TopoExplorerUnique.faces(solid);
-         (e,l) <- filter(f)) {
+         w <- TopoExplorerUnique.wires(f);
+         l <- filter(f,w);
+         e <- TopoExplorerUnique.edges(f)) {
       mf.add(f, e, l)
     }
     mf.result
   }
+  
+  def face(solid: TopoDS_Shape, filter: TopoDS_Face => Option[Length]) = {
+    val mf = new Chamfer(solid)
+    for (f <- TopoExplorerUnique.faces(solid);
+         l <- filter(f);
+         e <- TopoExplorerUnique.edges(f)) {
+      mf.add(f, e, l)
+    }
+    mf.result
+  }
+
 }

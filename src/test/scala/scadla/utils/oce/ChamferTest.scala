@@ -18,7 +18,7 @@ class ChamferTest extends FunSuite {
     val r = new OceRenderer
     val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
     assert(new BRepCheck_Analyzer(shape).isValid)
-    val shapeWithChamfer = Chamfer(shape, (solid,face,edge) => Some(0.2 mm))
+    val shapeWithChamfer = Chamfer(shape, (face,edge) => Some(0.2 mm))
     assert(new BRepCheck_Analyzer(shapeWithChamfer).isValid)
     //val obj = r.toMesh(shapeWithChamfer)
     //Viewer.default(obj)
@@ -29,7 +29,7 @@ class ChamferTest extends FunSuite {
     val r = new OceRenderer
     val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
     assert(new BRepCheck_Analyzer(shape).isValid)
-    val shapeWithChamfer = Chamfer(shape, (solid,face,edge) => Some(0.2 mm))
+    val shapeWithChamfer = Chamfer(shape, (face,edge) => Some(0.2 mm))
     assert(new BRepCheck_Analyzer(shapeWithChamfer).isValid)
     //val obj = r.toMesh(shapeWithChamfer)
     //Viewer.default(obj)
@@ -41,7 +41,7 @@ class ChamferTest extends FunSuite {
 //  val r = new OceRenderer
 //  val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
 //  assert(new BRepCheck_Analyzer(shape).isValid)
-//  val shapeWithChamfer = Chamfer(shape, (solid,face,edge) => Some(0.2 mm))
+//  val shapeWithChamfer = Chamfer(shape, (face,edge) => Some(0.2 mm))
 //  assert(new BRepCheck_Analyzer(shapeWithChamfer).isValid)
 //  val obj = r.toMesh(shapeWithChamfer)
 //  Viewer.default(obj)

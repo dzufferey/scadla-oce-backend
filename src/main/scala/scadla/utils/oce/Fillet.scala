@@ -16,10 +16,30 @@ class Fillet(solid: TopoDS_Shape) {
 
 object Fillet {
 
-  def apply(solid: TopoDS_Shape, filter: (TopoDS_Shape, TopoDS_Edge) => Option[Length]) = {
+  def apply(solid: TopoDS_Shape, filter: TopoDS_Edge => Option[Length]) = {
     val mf = new Fillet(solid)
     for (e <- TopoExplorerUnique.edges(solid);
-         l <- filter(solid,e)) {
+         l <- filter(e)) {
+      mf.add(l, e)
+    }
+    mf.result
+  }
+  
+  def wire(solid: TopoDS_Shape, filter: TopoDS_Wire => Option[Length]) = {
+    val mf = new Fillet(solid)
+    for (w <- TopoExplorerUnique.wires(solid);
+         l <- filter(w);
+         e <- TopoExplorerUnique.edges(w)) {
+      mf.add(l, e)
+    }
+    mf.result
+  }
+  
+  def face(solid: TopoDS_Shape, filter: TopoDS_Face => Option[Length]) = {
+    val mf = new Fillet(solid)
+    for (f <- TopoExplorerUnique.faces(solid);
+         l <- filter(f);
+         e <- TopoExplorerUnique.edges(f)) {
       mf.add(l, e)
     }
     mf.result
