@@ -61,16 +61,18 @@ object ExtendedOps {
 
     def isClosed: Boolean = {
       children.length == 1
-      /*
-      val bounds = Array[Double](0, 0)
-      val curve = BRep_Tool.curve(lhs, bounds)
-      if (curve != null) {
-        curve.isClosed()
-      } else {
-        sys.error("edge is degenerate or we need curve on surface ...")
-      }
-      */
     }
+
+    def curve: (Geom_Curve, Double, Double) = {
+      var range = Array.ofDim[Double](2)
+      val c = BRep_Tool.curve(lhs, range) //this leaks a bit of memory according to the file BRep.i in the jCAE repo
+      (c, range(0), range(1))
+    }
+
+    //u = BRep_Tool.parameter(TopoDS_Vertex, TopoDS_Edge);
+    //adapt = new GeomAdaptor_Curve(c, range(0), range(1))
+    //[x,y,z] = adapt.value(u)
+
 
   }
 
@@ -90,6 +92,20 @@ object ExtendedOps {
       val prop = new GProp_GProps()
       BRepGProp.linearProperties(lhs, prop)
       Millimeters(prop.mass)
+    }
+
+    //OccJava does not have the method to access that info so let us try the poor man's version
+    def c1Continuous: Boolean = {
+      val it = children
+      val first = it.next.curve
+      //TODO check continity of first ...
+      var current = first
+      while (it.hasNext) {
+        val previous = current
+        current = it.next
+        ???
+      }
+      ???
     }
 
   }

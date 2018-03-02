@@ -4,7 +4,8 @@ mkdir -p lib ext
 
 cd ext
 echo Cloning jCAE
-git clone https://github.com/jeromerobert/jCAE.git
+#git clone https://github.com/jeromerobert/jCAE.git
+git clone https://github.com/dzufferey/jCAE.git
 
 cd jCAE/occjava
 
