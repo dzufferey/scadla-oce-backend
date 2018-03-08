@@ -33,4 +33,8 @@ object OceTestCommon {
     new BRepPrimAPI_MakeCone(origin, radius, 0, height, math.Pi*2).shape
   }
 
+  def getCylinder(radius: Double = 2.0, height: Double = 5.0) = {
+    val origin = Array[Double](0, 0, 0, 0, 0, 1)
+    new BRepPrimAPI_MakeCylinder(origin, radius, height, math.Pi*2).shape
+  }
 }

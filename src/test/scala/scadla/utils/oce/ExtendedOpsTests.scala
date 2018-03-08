@@ -53,12 +53,6 @@ class ExtendedOpsTest extends FunSuite {
     for (e <- TopoExplorer.edges(box)) {
       assert(!e.isClosed)
     }
-    /*
-    val sphere = getSphere()
-    for (e <- TopoExplorer.edges(sphere)) {
-      assert(e.isDegenerate || e.isClosed)
-    }
-    */
     val cone = getCone()
     var open = 0
     var closed = 0
@@ -75,6 +69,41 @@ class ExtendedOpsTest extends FunSuite {
     assert(degenerate == 1)
     assert(closed == 1)
     assert(open == 1)
+  }
+
+  test("wire: c1Continuous") {
+    val box = getCube()
+    for (w <- TopoExplorer.wires(box)) {
+      assert(!w.c1Continuous)
+    }
+    val sphere = getSphere()
+    for (w <- TopoExplorer.wires(sphere)) {
+      assert(!w.c1Continuous)
+    }
+    var c1 = 0
+    var notC1 = 0
+    val cone = getCone()
+    for (w <- TopoExplorerUnique.wires(cone)) {
+      if (w.c1Continuous) {
+        c1 += 1
+      } else {
+        notC1 += 1
+      }
+    }
+    assert(c1 == 1)
+    assert(notC1 == 1)
+    c1 = 0
+    notC1 = 0
+    val cylinder = getCylinder()
+    for (w <- TopoExplorerUnique.wires(cylinder)) {
+      if (w.c1Continuous) {
+        c1 += 1
+      } else {
+        notC1 += 1
+      }
+    }
+    assert(c1 == 2)
+    assert(notC1 == 1)
   }
 
   test("face: isPlane") {

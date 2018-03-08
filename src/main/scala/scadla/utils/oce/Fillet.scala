@@ -7,10 +7,17 @@ import org.jcae.opencascade.jni._
 class Fillet(solid: TopoDS_Shape) {
 
   protected val mf = new BRepFilletAPI_MakeFillet(solid)
+  protected var trivial = true
 
-  def add(radius: Length, edge: TopoDS_Edge) = mf.add(radius.toMillimeters, edge)
+  def add(radius: Length, edge: TopoDS_Edge) = {
+    trivial = false
+    mf.add(radius.toMillimeters, edge)
+  }
 
-  def result = mf.shape
+  def result = {
+    if (trivial) solid
+    else mf.shape
+  }
 
 }
 

@@ -69,10 +69,19 @@ object ExtendedOps {
       (c, range(0), range(1))
     }
 
-    //u = BRep_Tool.parameter(TopoDS_Vertex, TopoDS_Edge);
-    //adapt = new GeomAdaptor_Curve(c, range(0), range(1))
-    //[x,y,z] = adapt.value(u)
+    def kind: GeomAbs_CurveType = {
+      new BRepAdaptor_Curve(lhs).getType
+    }
 
+    def description = {
+      val adaptor = new BRepAdaptor_Curve(lhs)
+      val kind = kindToString(adaptor.getType)
+      val start = adaptor.firstParameter
+      val end = adaptor.lastParameter
+      val startP = adaptor.value(start).mkString("(",",",")")
+      val endP = adaptor.value(end).mkString("(",",",")")
+      "curve: " + kind + "[" + start + "," + end + "], from " + startP + " to " + endP
+    }
 
   }
 
@@ -94,18 +103,61 @@ object ExtendedOps {
       Millimeters(prop.mass)
     }
 
-    //OccJava does not have the method to access that info so let us try the poor man's version
     def c1Continuous: Boolean = {
+      //Console.println("\n\n==============\n" + lhs.description)
+
+      def checkC1(g: GeomAbs_Shape) = g match {
+        case GeomAbs_Shape.C0 => false
+        case _ => true
+      }
+
+      def joined(c1: BRepAdaptor_Curve, c2: BRepAdaptor_Curve, toleranceP: Double = 1e-7, toleranceD: Double = 1e-1) = {
+        val p1 = Array.ofDim[Double](3)
+        val d1 = Array.ofDim[Double](3)
+        c1.d1(c1.lastParameter, p1, d1)
+        val p2 = Array.ofDim[Double](3)
+        val d2 = Array.ofDim[Double](3)
+        c2.d1(c2.firstParameter, p2, d2)
+        //Console.println("p1 " + p1.mkString(", "))
+        //Console.println("d1 " + d1.mkString(", "))
+        //Console.println("p2 " + p2.mkString(", "))
+        //Console.println("d2 " + d2.mkString(", "))
+        (toPoint(p1) to toPoint(p2)).norm <= Millimeters(toleranceP) &&
+        (toVector(d1).toUnitVector - toVector(d2).toUnitVector).norm <= Millimeters(toleranceD)
+      }
+
       val it = children
-      val first = it.next.curve
-      //TODO check continity of first ...
+      val first = it.next
+      //Console.println("first: " + first.description)
+      val firstAdaptor = new BRepAdaptor_Curve(first)
+      if (first.isDegenerate || !checkC1(firstAdaptor.continuity)) {
+        return false
+      }
+
       var current = first
+      var currentAdaptor = firstAdaptor
       while (it.hasNext) {
         val previous = current
+        val previousAdaptor = currentAdaptor
         current = it.next
-        ???
+        //Console.println("current: " + current.description)
+        currentAdaptor = new BRepAdaptor_Curve(current)
+        if (current.isDegenerate || !checkC1(currentAdaptor.continuity)) {
+          return false
+        }
+        if (!joined(previousAdaptor, currentAdaptor)) {
+          return false
+        }
       }
-      ???
+      if (!joined(currentAdaptor, firstAdaptor)) {
+        return false
+      } else {
+        return true
+      }
+    }
+
+    def description = {
+      children.map(_.description).mkString("wire\n  ", "\n  ", "\n")
     }
 
   }
