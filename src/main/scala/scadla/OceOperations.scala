@@ -41,6 +41,19 @@ object Fillet {
     Fillet.face(s, (e: TopoDS_Face) => if (select(e)) Some(radius) else None)
   }
 
+  def shape(s: Solid, select: TopoDS_Shape => Iterable[(TopoDS_Edge, Length)]): OceOperation = {
+    OceOperation(s, shape => {
+      val mf = new utils.oce.Fillet(shape)
+      for ((e,r) <- select(shape)) {
+        mf.add(r, e)
+      }
+      mf.result
+    })
+  }
+  def shape(s: Solid, radius: Length, select: TopoDS_Shape => Iterable[TopoDS_Edge]): OceOperation = {
+    Fillet.shape(s, (e: TopoDS_Shape) => select(e).map( _ -> radius ) )
+  }
+
 }
 
 object Chamfer {

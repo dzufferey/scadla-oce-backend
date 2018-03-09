@@ -7,6 +7,21 @@ import org.jcae.opencascade.jni._
 
 object ExtendedOps {
 
+  implicit class ShapeOps(lhs: TopoDS_Shape) {
+    def vertices = TopoExplorerUnique.vertices(lhs)
+    def allVertices = TopoExplorer.vertices(lhs)
+    def edges = TopoExplorerUnique.edges(lhs)
+    def allEdges = TopoExplorer.edges(lhs)
+    def wires = TopoExplorerUnique.wires(lhs)
+    def allWires = TopoExplorer.wires(lhs)
+    def faces = TopoExplorerUnique.faces(lhs)
+    def allFaces = TopoExplorer.faces(lhs)
+    def shells = TopoExplorerUnique.shells(lhs)
+    def allShells = TopoExplorer.shells(lhs)
+    def solids = TopoExplorerUnique.solids(lhs)
+    def allSolids = TopoExplorer.solids(lhs)
+  }
+
   implicit class VertexOps(lhs: TopoDS_Vertex) {
 
     def asPoint: Point = {
@@ -49,6 +64,10 @@ object ExtendedOps {
       TopoExplorerUnique.vertices(lhs)
     }
 
+    def allChildren: Iterator[TopoDS_Vertex] = {
+      TopoExplorer.vertices(lhs)
+    }
+
     def length: Length = {
       val prop = new GProp_GProps()
       BRepGProp.linearProperties(lhs, prop)
@@ -71,6 +90,21 @@ object ExtendedOps {
 
     def kind: GeomAbs_CurveType = {
       new BRepAdaptor_Curve(lhs).getType
+    }
+
+    def start = allChildren.next
+
+    def end = {
+      val it = allChildren
+      it.next
+      it.next
+    }
+
+    val extremities = {
+      val it = allChildren
+      val s = it.next
+      val e = it.next
+      (s,e)
     }
 
     def description = {
@@ -97,67 +131,41 @@ object ExtendedOps {
       TopoExplorerUnique.edges(lhs)
     }
 
+    def allChildren: Iterator[TopoDS_Edge] = {
+      TopoExplorer.edges(lhs)
+    }
+
     def length: Length = {
       val prop = new GProp_GProps()
       BRepGProp.linearProperties(lhs, prop)
       Millimeters(prop.mass)
     }
 
+    // find the loops in the wire
+    def subLoops: Iterable[Seq[TopoDS_Edge]] = {
+      //keep the edges and their starting point
+      var prefixes: List[(TopoDS_Edge,TopoDS_Vertex)] = Nil
+      var loops: List[Seq[TopoDS_Edge]] = Nil
+      for (e <- allChildren) {
+        val (start,end) = e.extremities
+        prefixes = (e -> start) :: prefixes
+        val i = prefixes.indexWhere{ case (_, pts) => end == pts }
+        if (i >= 0) {
+          val (l, rest) = prefixes.splitAt(i+1)
+          loops = l.map(_._1).reverse :: loops
+          prefixes = rest
+        }
+      }
+      loops
+    }
+
     def c1Continuous: Boolean = {
       //Console.println("\n\n==============\n" + lhs.description)
-
-      def checkC1(g: GeomAbs_Shape) = g match {
-        case GeomAbs_Shape.C0 => false
-        case _ => true
-      }
-
-      def joined(c1: BRepAdaptor_Curve, c2: BRepAdaptor_Curve, toleranceP: Double = 1e-7, toleranceD: Double = 1e-1) = {
-        val p1 = Array.ofDim[Double](3)
-        val d1 = Array.ofDim[Double](3)
-        c1.d1(c1.lastParameter, p1, d1)
-        val p2 = Array.ofDim[Double](3)
-        val d2 = Array.ofDim[Double](3)
-        c2.d1(c2.firstParameter, p2, d2)
-        //Console.println("p1 " + p1.mkString(", "))
-        //Console.println("d1 " + d1.mkString(", "))
-        //Console.println("p2 " + p2.mkString(", "))
-        //Console.println("d2 " + d2.mkString(", "))
-        (toPoint(p1) to toPoint(p2)).norm <= Millimeters(toleranceP) &&
-        (toVector(d1).toUnitVector - toVector(d2).toUnitVector).norm <= Millimeters(toleranceD)
-      }
-
-      val it = children
-      val first = it.next
-      //Console.println("first: " + first.description)
-      val firstAdaptor = new BRepAdaptor_Curve(first)
-      if (first.isDegenerate || !checkC1(firstAdaptor.continuity)) {
-        return false
-      }
-
-      var current = first
-      var currentAdaptor = firstAdaptor
-      while (it.hasNext) {
-        val previous = current
-        val previousAdaptor = currentAdaptor
-        current = it.next
-        //Console.println("current: " + current.description)
-        currentAdaptor = new BRepAdaptor_Curve(current)
-        if (current.isDegenerate || !checkC1(currentAdaptor.continuity)) {
-          return false
-        }
-        if (!joined(previousAdaptor, currentAdaptor)) {
-          return false
-        }
-      }
-      if (!joined(currentAdaptor, firstAdaptor)) {
-        return false
-      } else {
-        return true
-      }
+      scadla.utils.oce.c1Continuous(allChildren)
     }
 
     def description = {
-      children.map(_.description).mkString("wire\n  ", "\n  ", "\n")
+      allChildren.map(_.description).mkString("wire\n  ", "\n  ", "\n")
     }
 
   }
