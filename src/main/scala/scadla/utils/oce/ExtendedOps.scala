@@ -188,9 +188,12 @@ object ExtendedOps {
       Millimeters(1) * Millimeters(prop.mass)
     }
 
+    def kind: GeomAbs_SurfaceType = {
+      new BRepAdaptor_Surface(lhs).getType
+    }
+
     def isPlane: Boolean = {
-      val s = BRep_Tool.surface(lhs)
-      s.isInstanceOf[Geom_Plane]
+      kind == GeomAbs_SurfaceType.GeomAbs_Plane
     }
 
     protected def getPropsAt(u: Double, v: Double, degree: Int, tolerance: Length) = {
@@ -231,7 +234,13 @@ object ExtendedOps {
     def normal(u: Double = 0.5, v: Double = 0.5)(implicit tolerance: Length): Vector = {
       val props = getPropsAt(u, v, 2, tolerance)
       val n = props.normal()
-      Vector(n(0), n(1), n(2), Millimeters)
+      val vec = Vector(n(0), n(1), n(2), Millimeters)
+      if (lhs.orientation == TopAbs_Orientation.FORWARD) {
+        vec
+      } else {
+        assert(lhs.orientation == TopAbs_Orientation.REVERSED)
+        vec * -1
+      }
     }
 
     def normal(pnt: Point)(implicit tolerance: Length): Option[Vector] = {

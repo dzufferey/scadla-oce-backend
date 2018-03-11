@@ -28,6 +28,21 @@ package object oce {
     case GeomAbs_CurveType.GeomAbs_OtherCurve =>    "OtherCurve"
   }
 
+  def kindToString(kind: GeomAbs_SurfaceType) = kind match {
+    case GeomAbs_SurfaceType.GeomAbs_Plane =>                 "Plane"
+    case GeomAbs_SurfaceType.GeomAbs_Cylinder =>              "Cylinder"
+    case GeomAbs_SurfaceType.GeomAbs_Cone =>                  "Cone"
+    case GeomAbs_SurfaceType.GeomAbs_Sphere =>                "Sphere"
+    case GeomAbs_SurfaceType.GeomAbs_Torus =>                 "Torus"
+    case GeomAbs_SurfaceType.GeomAbs_BezierSurface =>         "BezierSurface"
+    case GeomAbs_SurfaceType.GeomAbs_BSplineSurface =>        "BSplineSurface"
+    case GeomAbs_SurfaceType.GeomAbs_SurfaceOfRevolution =>   "SurfaceOfRevolution"
+    case GeomAbs_SurfaceType.GeomAbs_SurfaceOfExtrusion =>    "SurfaceOfExtrusion"
+    case GeomAbs_SurfaceType.GeomAbs_OffsetSurface =>         "OffsetSurface"
+    case GeomAbs_SurfaceType.GeomAbs_OtherSurface =>          "OtherSurface"
+  }
+
+
   def toPoint(p: Array[Double]) = Point(Millimeters(p(0)), Millimeters(p(1)), Millimeters(p(2)))
   
   def toVector(p: Array[Double]) = Vector(p(0), p(1), p(2), Millimeters)

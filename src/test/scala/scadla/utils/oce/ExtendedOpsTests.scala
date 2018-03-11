@@ -124,9 +124,9 @@ class ExtendedOpsTest extends FunSuite {
       assert(e.isCurvatureDefined())
       assert(e.meanCurvature() ≈ (0 mm))
       assert(e.gaussianCurvature() ≈ (0 mm))
-      assert(e.normal() == Vector.x ||
-             e.normal() == Vector.y ||
-             e.normal() == Vector.z )
+      assert(e.normal() == Vector.x || e.normal() == -Vector.x ||
+             e.normal() == Vector.y || e.normal() == -Vector.y ||
+             e.normal() == Vector.z || e.normal() == -Vector.z )
     }
     val cone = getCone(1, 1)
     for (e <- TopoExplorerUnique.faces(cone)) {
@@ -134,8 +134,8 @@ class ExtendedOpsTest extends FunSuite {
       assert(e.gaussianCurvature() ≈ (0 mm))
       if (e.isUmbilic) {
         assert(e.meanCurvature() ≈ (0 mm))
-        assert(e.normal() == Vector.z)
-        assert(e.normal(Point(0 mm, 0 mm, 0 mm)).get == Vector.z)
+        assert(e.normal() == -Vector.z)
+        assert(e.normal(Point(0 mm, 0 mm, 0 mm)).get == -Vector.z)
         assert(e.nearestPoint(Point(0 mm, 0 mm, -5 mm)) == Point(0 mm, 0 mm, 0 mm))
       } else {
         val n = e.normal()

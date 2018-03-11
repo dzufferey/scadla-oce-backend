@@ -5,15 +5,18 @@ mkdir -p lib ext
 cd ext
 echo Cloning jCAE
 if test -d jCAE ; then
-    rm -rf jCAE
+    cd jCAE
+    git pull
+    cd ..
+else
+    #git clone https://github.com/jeromerobert/jCAE.git
+    git clone https://github.com/dzufferey/jCAE.git
 fi
-#git clone https://github.com/jeromerobert/jCAE.git
-git clone https://github.com/dzufferey/jCAE.git
 
 cd jCAE/occjava
 
 echo Building Swig bindings
-mkdir build
+mkdir -p build
 cd build
 cmake ..
 make
