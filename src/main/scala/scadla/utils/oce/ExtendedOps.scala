@@ -142,17 +142,21 @@ object ExtendedOps {
     }
 
     // find the loops in the wire
-    def subLoops: Iterable[Seq[TopoDS_Edge]] = {
+    def subLoops: Iterable[TopoDS_Wire] = {
       //keep the edges and their starting point
       var prefixes: List[(TopoDS_Edge,TopoDS_Vertex)] = Nil
-      var loops: List[Seq[TopoDS_Edge]] = Nil
+      var loops: List[TopoDS_Wire] = Nil
       for (e <- allChildren) {
         val (start,end) = e.extremities
         prefixes = (e -> start) :: prefixes
         val i = prefixes.indexWhere{ case (_, pts) => end == pts }
         if (i >= 0) {
           val (l, rest) = prefixes.splitAt(i+1)
-          loops = l.map(_._1).reverse :: loops
+          val builder = new BRepBuilderAPI_MakeWire()
+          for ( (e,_) <- l.reverse ) builder.add(e)
+          assert(builder.isDone)
+          val w = builder.shape.asInstanceOf[TopoDS_Wire]
+          loops = w :: loops
           prefixes = rest
         }
       }
@@ -306,5 +310,9 @@ object ExtendedOps {
     }
 
   }
+
+  import scala.language.implicitConversions
+
+  implicit def shapeIterator2Iterable[A <: TopoDS_Shape](it: Iterator[A]): Iterable[A] = it.toIterable
 
 }

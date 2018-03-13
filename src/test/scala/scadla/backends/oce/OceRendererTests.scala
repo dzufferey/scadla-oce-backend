@@ -31,16 +31,16 @@ class OceRendererTest extends FunSuite {
     val obj = r(s)
     Viewer.default(obj)
   }
-
 /*
   test("test 01") {
     val tree = {
-      val center = CenteredCube(5.0,5.0,5.0) * Sphere(2.0)
+      val center = CenteredCube(3.2,3.2,3.2) * Sphere(2.0)
       val c = Translate(0,0,-3, Cylinder(1.0, 6.0))
       val carved = center - c - c.rotateX(math.Pi/2) - c.rotateY(math.Pi/2)
-      Fillet.shape(carved, 0.1, s => for( w <- s.wires.toIterable;
-                                          l <- w.subLoops if c1Continuous(l);
-                                          e <- l ) yield e )
+    //Fillet.shape(carved, 0.1, s => for( w <- s.wires;
+    //                                    l <- w.subLoops if l.c1Continuous;
+    //                                    e <- l.edges ) yield e )
+      carved
     }
     renderAndShow(tree)
   }
