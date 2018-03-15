@@ -107,6 +107,12 @@ object ExtendedOps {
       (s,e)
     }
 
+    def adjacentFacesIn(shape: TopoDS_Shape): Iterator[TopoDS_Face] = {
+      TopoExplorerUnique.faces(shape).filter(f => {
+        TopoExplorerUnique.edges(f).contains(lhs)
+      })
+    }
+
     def description = {
       val adaptor = new BRepAdaptor_Curve(lhs)
       val kind = kindToString(adaptor.getType)
@@ -164,7 +170,6 @@ object ExtendedOps {
     }
 
     def c1Continuous: Boolean = {
-      //Console.println("\n\n==============\n" + lhs.description)
       scadla.utils.oce.c1Continuous(allChildren)
     }
 

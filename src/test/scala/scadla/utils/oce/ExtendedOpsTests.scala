@@ -71,6 +71,17 @@ class ExtendedOpsTest extends FunSuite {
     assert(open == 1)
   }
 
+  test("edge: adjacent faces") {
+    val box = getCube()
+    for (e <- TopoExplorer.edges(box)) {
+      assert(e.adjacentFacesIn(box).size == 2)
+    }
+    for (f <- TopoExplorer.faces(box);
+         e <- TopoExplorer.edges(f) ) {
+      assert(e.adjacentFacesIn(box).contains(f))
+    }
+  }
+
   test("wire: c1Continuous") {
     val box = getCube()
     for (w <- TopoExplorer.wires(box)) {
