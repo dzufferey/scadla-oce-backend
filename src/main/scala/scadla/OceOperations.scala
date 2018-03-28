@@ -16,8 +16,6 @@ case class OceOperation(s: Solid, op: TopoDS_Shape => TopoDS_Shape) extends Oper
   }
 }
 
-//TODO offset
-
 object Fillet {
 
   def apply(s: Solid, select: TopoDS_Edge => Option[Length]): OceOperation = {
@@ -77,6 +75,39 @@ object Chamfer {
   }
   def face(s: Solid, l: Length, select: TopoDS_Face => Boolean): OceOperation = {
     Chamfer.face(s, (f: TopoDS_Face) => if (select(f)) Some(l) else None)
+  }
+
+}
+
+object Offset {
+
+  def apply(l: Length, s: Solid): OceOperation = {
+    OceOperation(s, shape => {
+      val mf = new utils.oce.Offset(shape, l)
+      mf.result
+    })
+  }
+
+}
+
+object ThickSolid {
+  
+  def apply(s: Solid, l: Length, toRemove: TopoDS_Shape => Iterable[TopoDS_Face]): OceOperation = {
+    OceOperation(s, shape => {
+      val mf = new utils.oce.ThickSolid(shape, l)
+      mf.add(toRemove(shape))
+      mf.result
+    })
+  }
+  
+  def face(s: Solid, l: Length, toRemove: TopoDS_Face => Boolean): OceOperation = {
+    OceOperation(s, shape => {
+      val mf = new utils.oce.ThickSolid(shape, l)
+      for (f <- utils.oce.TopoExplorerUnique.faces(shape) if toRemove(f)) {
+        mf.add(f)
+      }
+      mf.result
+    })
   }
 
 }

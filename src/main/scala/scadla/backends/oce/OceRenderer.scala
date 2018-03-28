@@ -186,25 +186,35 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
       val face = explorer.next
       val loc = new TopLoc_Location
       val tri = BRep_Tool.triangulation(face, loc)
-      val n = tri.triangles.size / 3
-      def getPoint(index: Int) = {
-        Point(Millimeters(tri.nodes()(3*index)),
-              Millimeters(tri.nodes()(3*index+1)),
-              Millimeters(tri.nodes()(3*index+2)))
+      val nodes = tri.nodes
+      val nPnt = nodes.size / 3
+      var i = 0
+      val tmp = Array.ofDim[Double](3)
+      val pnt = Array.ofDim[Point](nPnt)
+      while (i < nPnt) {
+        tmp(0) = nodes(3*i)
+        tmp(1) = nodes(3*i+1)
+        tmp(2) = nodes(3*i+2)
+        val trf = loc.transformation
+        trf.transforms(tmp)
+        pnt(i) = Point(Millimeters(tmp(0)), Millimeters(tmp(1)), Millimeters(tmp(2)))
+        i += 1
       }
       def getFace(index: Int) = {
         if (face.orientation == TopAbs_Orientation.FORWARD) {
-          Face(getPoint(tri.triangles()(3*index  )),
-               getPoint(tri.triangles()(3*index+1)),
-               getPoint(tri.triangles()(3*index+2)))
+          Face(pnt(tri.triangles()(3*index  )),
+               pnt(tri.triangles()(3*index+1)),
+               pnt(tri.triangles()(3*index+2)))
         } else {
-          Face(getPoint(tri.triangles()(3*index+1)),
-               getPoint(tri.triangles()(3*index  )),
-               getPoint(tri.triangles()(3*index+2)))
+          Face(pnt(tri.triangles()(3*index+1)),
+               pnt(tri.triangles()(3*index  )),
+               pnt(tri.triangles()(3*index+2)))
         }
       }
-      var i = 0
-      while (i < n) {
+      val triangles = tri.triangles
+      val nTri = triangles.size / 3
+      i = 0
+      while (i < nTri) {
         builder += getFace(i)
         i += 1
       }

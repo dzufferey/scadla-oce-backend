@@ -35,16 +35,15 @@ class FilletTest extends FunSuite {
     //Viewer.default(obj)
   }
 
-  //XXX for some reason this does not work!
-//test("test 03") {
-//  val tree = CenteredCube(1,1,3)
-//  val r = new OceRenderer
-//  val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
-//  assert(new BRepCheck_Analyzer(shape).isValid)
-//  val shapeWithFillet = Fillet(shape, edge => Some(0.2 mm))
-//  assert(new BRepCheck_Analyzer(shapeWithFillet).isValid)
-//  val obj = r.toMesh(shapeWithFillet)
-//  Viewer.default(obj)
-//}
+  test("test 03") {
+    val tree = CenteredCube(1,1,3)
+    val r = new OceRenderer
+    val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    val shapeWithFillet = Fillet(shape, edge => Some(0.2 mm))
+    assert(new BRepCheck_Analyzer(shapeWithFillet).isValid)
+    //val obj = r.toMesh(shapeWithFillet)
+    //Viewer.default(obj)
+  }
 
 }
