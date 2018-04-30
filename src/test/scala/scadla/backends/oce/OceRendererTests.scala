@@ -31,16 +31,16 @@ class OceRendererTest extends FunSuite {
     val obj = r(s)
     Viewer.default(obj)
   }
+
 /*
   test("test 01") {
     val tree = {
       val center = CenteredCube(3.2,3.2,3.2) * Sphere(2.0)
       val c = Translate(0,0,-3, Cylinder(1.0, 6.0))
       val carved = center - c - c.rotateX(math.Pi/2) - c.rotateY(math.Pi/2)
-    //Fillet.shape(carved, 0.1, s => for( w <- s.wires;
-    //                                    l <- w.subLoops if l.c1Continuous;
-    //                                    e <- l.edges ) yield e )
-      carved
+      Fillet.shape(carved, 0.1, s => for( w <- s.wires;
+                                          l <- w.subLoops if l.c1Continuous;
+                                          e <- l.edges ) yield e )
     }
     renderAndShow(tree)
   }
@@ -55,6 +55,24 @@ class OceRendererTest extends FunSuite {
   test("test 03") {
     val tree = Chamfer(Cube(1,1,1), 0.2, (_: TopoDS_Face, _: TopoDS_Edge) => true)
     renderAndShow(tree)
+  }
+*/
+/*
+  test("test 04") {
+    val h = scadla.utils.extrusion.H(20, 20, 3)(100)
+    val h1 = Fillet.shape(h, 1, s => {
+        def checkAngles(e: TopoDS_Edge) = {
+          implicit val tolerance: Length = 1e-3
+          val fs = e.adjacentFacesIn(s)
+          val n1 = fs.next.normal()
+          val f2 = fs.next
+          assert(!fs.hasNext)
+          val p1 = e.start.asPoint + n1
+          f2.pointOnFace(p1)
+        }
+        s.edges.filter(checkAngles)
+      })
+    renderAndShow(h1)
   }
 */
 }

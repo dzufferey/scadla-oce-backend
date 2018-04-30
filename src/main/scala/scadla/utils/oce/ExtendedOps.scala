@@ -274,6 +274,13 @@ object ExtendedOps {
       Point(Millimeters(p2(0)), Millimeters(p2(1)), Millimeters(p2(2)))
     }
 
+    def pointOnFace(pnt: Point)(implicit tolerance: Length): Boolean = {
+      val p = Array[Double](pnt.x.toMillimeters, pnt.y.toMillimeters, pnt.z.toMillimeters)
+      val classifier = new BRepClass_FaceClassifier()
+      classifier.perform(lhs, p, tolerance.toMillimeters)
+      classifier.state == TopAbs_State.ON
+    }
+
   }
 
   implicit class ShellOps(lhs: TopoDS_Shell) {
