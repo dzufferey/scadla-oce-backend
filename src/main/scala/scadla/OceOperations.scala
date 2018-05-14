@@ -79,17 +79,6 @@ object Chamfer {
 
 }
 
-object Offset {
-
-  def apply(l: Length, s: Solid): OceOperation = {
-    OceOperation(s, shape => {
-      val mf = new utils.oce.Offset(shape, l)
-      mf.result
-    })
-  }
-
-}
-
 object ThickSolid {
   
   def apply(s: Solid, l: Length, toRemove: TopoDS_Shape => Iterable[TopoDS_Face]): OceOperation = {
@@ -108,6 +97,41 @@ object ThickSolid {
       }
       mf.result
     })
+  }
+
+}
+
+case class OceOffset(l: Length, s: Solid) extends Operation(Seq(s)) {
+
+  def setChildren(c: Seq[Solid]) = {
+    assert(c.length == 1)
+    OceOffset(l, c.head)
+  }
+
+  private def distribute(l: Length, s: Solid): Solid = s match {
+    case Empty => Empty
+    case Union(args @ _*) => Union(args.map(distribute(l, _)): _*)
+    case Intersection(args @ _*) => Intersection(args.map(distribute(l, _)): _*)
+    case Difference(pos, neg @ _*) => Difference(distribute(l, pos), neg.map(distribute(-l, _)): _*)
+    case Translate(x, y, z, s) => Translate(x, y, z, distribute(l,s))
+    case Rotate(x, y, z, s) => Rotate(x, y, z, distribute(l,s))
+    case Mirror(x, y, z, s) => Mirror(x, y, z, distribute(l,s))
+    case Scale(x, y, z, s) if x == y && y == z => Scale(x, y, z, distribute(l/x,s))
+    case other => OceOffset(l, other).asOceOperation
+  }
+
+  //FIXME tends to crash and it works better is we distribute the operation ...
+  //However, it does not always give the expeected result
+  def distribute: Solid = distribute(l, s)
+
+  def asOceOperation: OceOperation = OceOperation(s, shape => (new utils.oce.Offset(shape, l)).result)
+
+}
+
+object Offset {
+
+  def apply(l: Length, s: Solid) = {
+    OceOffset(l, s)
   }
 
 }

@@ -26,6 +26,90 @@ class OffsetTest extends FunSuite {
     //Viewer.default(obj)
   }
 
+  test("test 01a") {
+    val tree = scadla.Offset(0.3, Cube(3,3,3))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 01b") {
+    val tree = scadla.Offset(0.3, CenteredCube(3,3,3))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 01c") {
+    val tree = scadla.Offset(0.3, Sphere(1))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 01d") {
+    val tree = scadla.Offset(0.3, Translate(1.5, 0, 0, Sphere(1.0)))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 01e") {
+    val tree = scadla.Offset(0.3, Union(
+      CenteredCube(1.5,1.5,1.5),
+      Sphere(1.0)
+    ))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 01f") {
+    val tree = Union(
+      scadla.Offset(0.3, CenteredCube(1.5,1.5,1.5)),
+      scadla.Offset(0.3, Sphere(1.0))
+    )
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 01g") {
+    val tree = scadla.Offset(0.3, Intersection(
+      CenteredCube(3,3,3),
+      Translate(1.5, 0, 0, Sphere(1.0))
+    ))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 01h") {
+    val tree = scadla.Offset(0.3, Difference(
+      CenteredCube(3,3,3),
+      Translate(1.5, 0, 0, Sphere(1.0))
+    ))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
   test("test 01") {
     val tree = scadla.Offset(0.3, Union(
       CenteredCube(3,3,3),
@@ -40,6 +124,30 @@ class OffsetTest extends FunSuite {
 
   test("test 02") {
     val tree = scadla.Offset(-0.3, Union(
+      CenteredCube(3,3,3),
+      Translate(1.5, 0, 0, Sphere(1.0))
+    ))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 02a") {
+    val tree = scadla.Offset(-0.3, Intersection(
+      CenteredCube(3,3,3),
+      Translate(1.5, 0, 0, Sphere(1.0))
+    ))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(new BRepCheck_Analyzer(shape).isValid)
+    //val obj = r.toMesh(shape)
+    //Viewer.default(obj)
+  }
+
+  test("test 02b") {
+    val tree = scadla.Offset(-0.3, Difference(
       CenteredCube(3,3,3),
       Translate(1.5, 0, 0, Sphere(1.0))
     ))

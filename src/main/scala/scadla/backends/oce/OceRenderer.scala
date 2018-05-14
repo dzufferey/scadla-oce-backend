@@ -7,6 +7,8 @@ import squants.space.Length
 import squants.space.Angle
 import squants.space.Millimeters
 import org.jcae.opencascade.jni._
+import dzufferey.utils._
+import dzufferey.utils.LogLevel._
 
 class OceRenderer extends RendererAux[TopoDS_Shape] {
 
@@ -16,6 +18,7 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     case OceShape(_) => true
     case s: Shape => super.isSupported(s)
     case t: Transform => super.isSupported(t)
+    case OceOffset(_, s) => isSupported(s)
     case OceOperation(s, _) => isSupported(s)
     case o: Operation => super.isSupported(o)
     case _ => false
@@ -138,6 +141,20 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
     case _: Intersection => intersection(args)
     case _: Difference => difference(args.head, args.tail)
     case OceOperation(_, op) => op(args.head)
+    case offset @ OceOffset(_, _) =>
+      try {
+          val shape = offset.asOceOperation.op(args.head)
+          if (new BRepCheck_Analyzer(shape).isValid) {
+            shape
+          } else {
+            Logger("OceRenderer", Warning, "Offset pproduced an invalid shape trying fallback (distribute operation)")
+            render(offset.distribute)
+          }
+      } catch {
+        case e: java.lang.RuntimeException if e.getMessage.startsWith("StdFail_NotDone") =>
+          Logger("OceRenderer", Warning, "Offset failed with '" + e.getMessage + "' trying fallback (distribute operation)")
+          render(offset.distribute)
+      }
     case o => sys.error("oce backend does not support " + o)
   }
 
