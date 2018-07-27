@@ -100,11 +100,29 @@ object ExtendedOps {
       it.next
     }
 
-    val extremities = {
+    def extremities = {
       val it = allChildren
       val s = it.next
       val e = it.next
       (s,e)
+    }
+
+    def point(u: Double) = {
+      val adaptor = new BRepAdaptor_Curve(lhs)
+      val start = adaptor.firstParameter
+      val end = adaptor.lastParameter
+      val pnt = adaptor.value(start + (end - start) * u)
+      Point(Millimeters(pnt(0)), Millimeters(pnt(1)), Millimeters(pnt(2)))
+    }
+
+    def tangent(u: Double = 0.5) = {
+      var vec = Array.ofDim[Double](3)
+      var pnt = Array.ofDim[Double](3)
+      val adaptor = new BRepAdaptor_Curve(lhs)
+      val start = adaptor.firstParameter
+      val end = adaptor.lastParameter
+      adaptor.d1(start + (end - start) * u, pnt, vec)
+      Vector(vec(0), vec(1), vec(2), Millimeters)
     }
 
     def adjacentFacesIn(shape: TopoDS_Shape): Iterator[TopoDS_Face] = {

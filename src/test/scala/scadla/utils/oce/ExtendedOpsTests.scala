@@ -71,6 +71,34 @@ class ExtendedOpsTest extends FunSuite {
     assert(open == 1)
   }
 
+  test("edge: point") {
+    val box = getCube(1, 1, 1)
+    for (e <- TopoExplorer.edges(box)) {
+      val p1 = e.point(0.0)
+      assert(p1.x ≈ (0 mm) || p1.x ≈ (1 mm))
+      assert(p1.y ≈ (0 mm) || p1.y ≈ (1 mm))
+      assert(p1.z ≈ (0 mm) || p1.z ≈ (1 mm))
+      val p2 = e.point(0.5)
+      assert(p2.x ≈ (0 mm) || p2.x ≈ (0.5 mm) || p2.x ≈ (1 mm))
+      assert(p2.y ≈ (0 mm) || p2.y ≈ (0.5 mm) || p2.y ≈ (1 mm))
+      assert(p2.z ≈ (0 mm) || p2.z ≈ (0.5 mm) || p2.z ≈ (1 mm))
+      val p3 = e.point(1.0)
+      assert(p3.x ≈ (0 mm) || p3.x ≈ (1 mm))
+      assert(p3.y ≈ (0 mm) || p3.y ≈ (1 mm))
+      assert(p3.z ≈ (0 mm) || p3.z ≈ (1 mm))
+    }
+  }
+
+  test("edge: tangent") {
+    val box = getCube(1, 1, 1)
+    for (e <- TopoExplorer.edges(box)) {
+      val t = e.tangent()
+      assert(t.x ≈ (0 mm) || t.x ≈ (1 mm) || t.x ≈ (-1 mm))
+      assert(t.y ≈ (0 mm) || t.y ≈ (1 mm) || t.y ≈ (-1 mm))
+      assert(t.z ≈ (0 mm) || t.z ≈ (1 mm) || t.z ≈ (-1 mm))
+    }
+  }
+
   test("edge: adjacent faces") {
     val box = getCube()
     for (e <- TopoExplorer.edges(box)) {

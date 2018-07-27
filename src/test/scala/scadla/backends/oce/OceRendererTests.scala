@@ -26,13 +26,23 @@ class OceRendererTest extends FunSuite {
     assert(obj.faces.forall{ case Face(p0,p1,p2) => unitPoint(p1) && unitPoint(p2) && unitPoint(p0) })
   }
 
-  def renderAndShow(s: Solid) {
+  test("rendering a sphere") {
     val r = new OceRenderer
-    val obj = r(s)
-    Viewer.default(obj)
+    val obj = r(Sphere(1))
+    def unitPoint(p: Point): Boolean = {
+      (p.toVector.norm.toMillimeters - 1) <= 1e-3
+    }
+    assert(obj.faces.forall{ case Face(p0,p1,p2) => unitPoint(p1) && unitPoint(p2) && unitPoint(p0) })
   }
 
-/*
+  def render(s: Solid, show: Boolean = false) {
+    val r = new OceRenderer
+    val obj = r(s)
+    if (show) {
+      Viewer.default(obj)
+    }
+  }
+
   test("test 01") {
     val tree = {
       val center = CenteredCube(3.2,3.2,3.2) * Sphere(2.0)
@@ -42,22 +52,19 @@ class OceRendererTest extends FunSuite {
                                           l <- w.subLoops if l.c1Continuous;
                                           e <- l.edges ) yield e )
     }
-    renderAndShow(tree)
+    render(tree)
   }
-*/
-/*
+
   test("test 02") {
     val tree = Fillet(Cube(1,1,1), 0.2, (_: TopoDS_Edge) => true)
-    renderAndShow(tree)
+    render(tree)
   }
-*/
-/*
+
   test("test 03") {
     val tree = Chamfer(Cube(1,1,1), 0.2, (_: TopoDS_Face, _: TopoDS_Edge) => true)
-    renderAndShow(tree)
+    render(tree)
   }
-*/
-/*
+
   test("test 04") {
     val h = scadla.utils.extrusion.H(20, 20, 3)(100)
     val h1 = Fillet.shape(h, 1, s => {
@@ -72,7 +79,7 @@ class OceRendererTest extends FunSuite {
         }
         s.edges.filter(checkAngles)
       })
-    renderAndShow(h1)
+    render(h1)
   }
-*/
+
 }
