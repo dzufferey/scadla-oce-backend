@@ -2,12 +2,12 @@ package scadla.utils.oce
 
 import scadla._
 import squants.space.{Length, Angle, Area, Volume}
-import squants.space.Millimeters
+import squants.space.{Millimeters, Microlitres}
 import org.jcae.opencascade.jni._
 
 object ExtendedOps {
 
-  implicit class ShapeOps(lhs: TopoDS_Shape) {
+  implicit final class ShapeOps(private val lhs: TopoDS_Shape) extends AnyVal {
     def vertices = TopoExplorerUnique.vertices(lhs)
     def allVertices = TopoExplorer.vertices(lhs)
     def edges = TopoExplorerUnique.edges(lhs)
@@ -22,7 +22,7 @@ object ExtendedOps {
     def allSolids = TopoExplorer.solids(lhs)
   }
 
-  implicit class VertexOps(lhs: TopoDS_Vertex) {
+  implicit final class VertexOps(private val lhs: TopoDS_Vertex) extends AnyVal {
 
     def asPoint: Point = {
       val p = BRep_Tool.pnt(lhs)
@@ -52,7 +52,7 @@ object ExtendedOps {
 
   }
 
-  implicit class EdgeOps(lhs: TopoDS_Edge) {
+  implicit final class EdgeOps(private val lhs: TopoDS_Edge) extends AnyVal {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Wire] = {
       TopoExplorerUnique.wires(shape).filter(wire => {
@@ -143,7 +143,7 @@ object ExtendedOps {
 
   }
 
-  implicit class WireOps(lhs: TopoDS_Wire) {
+  implicit final class WireOps(private val lhs: TopoDS_Wire) extends AnyVal {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Face] = {
       TopoExplorerUnique.faces(shape).filter(face => {
@@ -197,7 +197,7 @@ object ExtendedOps {
 
   }
 
-  implicit class FaceOps(lhs: TopoDS_Face) {
+  implicit final class FaceOps(private val lhs: TopoDS_Face) extends AnyVal {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Shell] = {
       TopoExplorerUnique.shells(shape).filter(s => {
@@ -301,7 +301,7 @@ object ExtendedOps {
 
   }
 
-  implicit class ShellOps(lhs: TopoDS_Shell) {
+  implicit final class ShellOps(private val lhs: TopoDS_Shell) extends AnyVal {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_Solid] = {
       TopoExplorerUnique.solids(shape).filter(s => {
@@ -321,7 +321,7 @@ object ExtendedOps {
 
   }
 
-  implicit class SolidOps(lhs: TopoDS_Solid) {
+  implicit final class SolidOps(private val lhs: TopoDS_Solid) extends AnyVal {
 
     def parentsIn(shape: TopoDS_Shape): Iterator[TopoDS_CompSolid] = {
       TopoExplorerUnique.compSolids(shape).filter(comp => {
@@ -336,7 +336,7 @@ object ExtendedOps {
     def volume: Volume = {
       val prop = new GProp_GProps()
       BRepGProp.volumeProperties(lhs, prop)
-      Millimeters(1) * Millimeters(1) * Millimeters(prop.mass)
+      Microlitres(prop.mass)
     }
 
   }
