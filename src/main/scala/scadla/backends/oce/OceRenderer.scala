@@ -3,14 +3,12 @@ package scadla.backends.oce
 import scadla._
 import scadla.utils.oce.TopoExplorerUnique
 import scadla.backends.RendererAux
-import squants.space.Length
-import squants.space.Angle
-import squants.space.Millimeters
+import squants.space.{Length, LengthUnit, Millimeters}
 import org.jcae.opencascade.jni._
 import dzufferey.utils._
 import dzufferey.utils.LogLevel._
 
-class OceRenderer extends RendererAux[TopoDS_Shape] {
+class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Shape] {
 
   var deviation = 2e-2
 
@@ -44,7 +42,7 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
       //TODO identify the connected components (one solid per component)
       val (points, faces) = p.indexed 
       val vertices = points.map{ case Point(x,y,z) =>
-        val a = Array[Double](x.toMillimeters, y.toMillimeters, z.toMillimeters)
+        val a = Array[Double](length2Double(x), length2Double(y), length2Double(z))
         new BRepBuilderAPI_MakeVertex(a).shape().asInstanceOf[TopoDS_Vertex]
       }
       val edges = scala.collection.mutable.Map[(Int,Int), TopoDS_Edge]()
@@ -82,19 +80,19 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
 
   def cube(width: Length, depth: Length, height: Length): TopoDS_Shape = {
     val lowerLeft = Array[Double](0.0, 0.0, 0.0)
-    val upperRight = Array[Double](width.toMillimeters, depth.toMillimeters, height.toMillimeters)
+    val upperRight = Array[Double](length2Double(width), length2Double(depth), length2Double(height))
     new BRepPrimAPI_MakeBox(lowerLeft, upperRight).shape
   }
 
   def sphere(radius: Length): TopoDS_Shape = {
     val origin = Array[Double](0.0, 0.0, 0.0)
-    new BRepPrimAPI_MakeSphere(origin, radius.toMillimeters).shape
+    new BRepPrimAPI_MakeSphere(origin, length2Double(radius)).shape
   }
 
   def cylinder(radiusBot: Length, radiusTop: Length, height: Length): TopoDS_Shape = {
-    val rb = radiusBot.toMillimeters
-    val rt = radiusTop.toMillimeters
-    val h = height.toMillimeters
+    val rb = length2Double(radiusBot)
+    val rt = length2Double(radiusTop)
+    val h = length2Double(height)
     assert(rb >= 0.0)
     assert(rt >= 0.0)
     assert(h >= 0.0)
@@ -214,7 +212,7 @@ class OceRenderer extends RendererAux[TopoDS_Shape] {
         tmp(2) = nodes(3*i+2)
         val trf = loc.transformation
         trf.transforms(tmp)
-        pnt(i) = Point(Millimeters(tmp(0)), Millimeters(tmp(1)), Millimeters(tmp(2)))
+        pnt(i) = Point(unit(tmp(0)), unit(tmp(1)), unit(tmp(2)))
         i += 1
       }
       def getFace(index: Int) = {
