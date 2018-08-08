@@ -40,6 +40,8 @@ class OceRendererTest extends FunSuite {
     val obj = r(s)
     if (show) {
       Viewer.default(obj)
+      //r.toIGES(s, "test.igs")
+      //r.toSTEP(s, "test.stp")
     }
   }
 

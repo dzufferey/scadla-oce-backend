@@ -3,7 +3,7 @@ package scadla.backends.oce
 import scadla._
 import scadla.utils.oce.TopoExplorerUnique
 import scadla.backends.RendererAux
-import squants.space.{Length, LengthUnit, Millimeters}
+import squants.space._
 import org.jcae.opencascade.jni._
 import dzufferey.utils._
 import dzufferey.utils.LogLevel._
@@ -111,9 +111,11 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
       val poly = FromFile(path, format).load
       polyhedron(poly)
     case "brep" | "brp" =>
+      //BREP is unitless so make sure you save and load them with the same units
       BRepTools.read(path, new BRep_Builder())
     case "iges" | "igs" =>
       // https://dev.opencascade.org/doc/overview/html/occt_user_guides__iges.html
+      assert(unit == Millimeters, "only MM supported for the moment, TODO support more (xstep.cascade.unit)")
       val reader = new IGESControl_Reader
       reader.readFile(path.getBytes())
       reader.nbRootsForTransfer
@@ -123,6 +125,7 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
       else result
     case "step" | "stp" =>
       // https://dev.opencascade.org/doc/overview/html/occt_user_guides__step.html
+      assert(unit == Millimeters, "only MM supported for the moment, TODO support more (xstep.cascade.unit)")
       val reader = new STEPControl_Reader
       reader.readFile(path.getBytes())
       reader.nbRootsForTransfer
@@ -237,6 +240,49 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     Polyhedron(builder.result)
   }
 
-  //TODO save brep, iges, step
+  def toSTEP(obj: TopoDS_Shape, outputFile: String) {
+    //https://dev.opencascade.org/doc/overview/html/occt_user_guides__step.html#occt_step_3
+    assert(unit == Millimeters, "only MM supported for the moment, TODO support more (write.step.unit)")
+    val writer = new STEPControl_Writer()
+    writer.transfer(obj, STEPControl_StepModelType.ManifoldSolidBrep)
+    writer.write(outputFile)
+  }
+
+  def toIGES(obj: TopoDS_Shape, outputFile: String) {
+    //https://dev.opencascade.org/doc/overview/html/occt_user_guides__iges.html#occt_iges_3
+    new IGESControl_Controller().init()
+    val unitStr = unit match {
+      case Millimeters => "MM"
+      case Inches => "IN"
+      case Centimeters => "CM"
+      case Feet => "FT"
+      case Meters => "M"
+      case Microns => "UM"
+      case Kilometers => "KM"
+      case UsMiles => "MI"
+      // MIL (Mils), UIN (Microinches)
+      case _ => sys.error("unit " + unit + " not supported")
+    }
+    val writer = new IGESControl_Writer(unitStr, 1)
+    writer.addShape(obj)
+    writer.computeModel()
+    writer.write(outputFile)
+  }
+
+  def toBREP(obj: TopoDS_Shape, outputFile: String) {
+    BRepTools.write(obj, outputFile)
+  }
+
+  def toSTEP(obj: Solid, outputFile: String) {
+    toSTEP(render(obj), outputFile)
+  }
+
+  def toIGES(obj: Solid, outputFile: String) {
+    toIGES(render(obj), outputFile)
+  }
+
+  def toBREP(obj: Solid, outputFile: String) {
+    toBREP(render(obj), outputFile)
+  }
 
 }
