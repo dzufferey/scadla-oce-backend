@@ -141,10 +141,10 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     case _: Union => union(args)
     case _: Intersection => intersection(args)
     case _: Difference => difference(args.head, args.tail)
-    case OceOperation(_, op) => op(args.head)
+    case OceOperation(_, op) => op(args.head, unit)
     case offset @ OceOffset(_, _) =>
       try {
-          val shape = offset.asOceOperation.op(args.head)
+          val shape = offset.asOceOperation.op(args.head, unit)
           if (new BRepCheck_Analyzer(shape).isValid) {
             shape
           } else {

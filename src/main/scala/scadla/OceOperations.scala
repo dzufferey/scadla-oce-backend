@@ -1,6 +1,6 @@
 package scadla
 
-import squants.space.Length
+import squants.space.{Length, LengthUnit}
 import org.jcae.opencascade.jni._
 
 case class OceShape(shape: TopoDS_Shape) extends Shape {
@@ -9,7 +9,7 @@ case class OceShape(shape: TopoDS_Shape) extends Shape {
          shape.shapeType == TopAbs_ShapeEnum.COMPOUND)
 }
 
-case class OceOperation(s: Solid, op: TopoDS_Shape => TopoDS_Shape) extends Operation(Seq(s)) {
+case class OceOperation(s: Solid, op: (TopoDS_Shape, LengthUnit) => TopoDS_Shape) extends Operation(Seq(s)) {
   def setChildren(c: Seq[Solid]) = {
     assert(c.length == 1)
     OceOperation(c.head, op)
@@ -19,29 +19,29 @@ case class OceOperation(s: Solid, op: TopoDS_Shape => TopoDS_Shape) extends Oper
 object Fillet {
 
   def apply(s: Solid, select: TopoDS_Edge => Option[Length]): OceOperation = {
-    OceOperation(s, shape => utils.oce.Fillet(shape, select))
+    OceOperation(s, (shape, unit) => utils.oce.Fillet(shape, select, unit))
   }
   def apply(s: Solid, radius: Length, select: TopoDS_Edge => Boolean): OceOperation = {
     Fillet(s, (e: TopoDS_Edge) => if (select(e)) Some(radius) else None)
   }
 
   def wire(s: Solid, select: TopoDS_Wire => Option[Length]): OceOperation = {
-    OceOperation(s, shape => utils.oce.Fillet.wire(shape, select))
+    OceOperation(s, (shape, unit) => utils.oce.Fillet.wire(shape, select, unit))
   }
   def wire(s: Solid, radius: Length, select: TopoDS_Wire => Boolean): OceOperation = {
     Fillet.wire(s, (e: TopoDS_Wire) => if (select(e)) Some(radius) else None)
   }
 
   def face(s: Solid, select: TopoDS_Face => Option[Length]): OceOperation = {
-    OceOperation(s, shape => utils.oce.Fillet.face(shape, select))
+    OceOperation(s, (shape, unit) => utils.oce.Fillet.face(shape, select, unit))
   }
   def face(s: Solid, radius: Length, select: TopoDS_Face => Boolean): OceOperation = {
     Fillet.face(s, (e: TopoDS_Face) => if (select(e)) Some(radius) else None)
   }
 
   def shape(s: Solid, select: TopoDS_Shape => Iterable[(TopoDS_Edge, Length)]): OceOperation = {
-    OceOperation(s, shape => {
-      val mf = new utils.oce.Fillet(shape)
+    OceOperation(s, (shape, unit) => {
+      val mf = new utils.oce.Fillet(shape, unit)
       for ((e,r) <- select(shape)) {
         mf.add(r, e)
       }
@@ -57,21 +57,21 @@ object Fillet {
 object Chamfer {
 
   def apply(s: Solid, select: (TopoDS_Face, TopoDS_Edge) => Option[Length]): OceOperation = {
-    OceOperation(s, shape => utils.oce.Chamfer(shape, select))
+    OceOperation(s, (shape, unit) => utils.oce.Chamfer(shape, select, unit))
   }
   def apply(s: Solid, l: Length, select: (TopoDS_Face, TopoDS_Edge) => Boolean): OceOperation = {
     Chamfer(s, (f: TopoDS_Face, e: TopoDS_Edge) => if (select(f,e)) Some(l) else None)
   }
 
   def wire(s: Solid, select: (TopoDS_Face, TopoDS_Wire) => Option[Length]): OceOperation = {
-    OceOperation(s, shape => utils.oce.Chamfer.wire(shape, select))
+    OceOperation(s, (shape, unit) => utils.oce.Chamfer.wire(shape, select, unit))
   }
   def wire(s: Solid, l: Length, select: (TopoDS_Face, TopoDS_Wire) => Boolean): OceOperation = {
     Chamfer.wire(s, (f: TopoDS_Face, e: TopoDS_Wire) => if (select(f,e)) Some(l) else None)
   }
 
   def face(s: Solid, select: TopoDS_Face => Option[Length]): OceOperation = {
-    OceOperation(s, shape => utils.oce.Chamfer.face(shape, select))
+    OceOperation(s, (shape, unit) => utils.oce.Chamfer.face(shape, select, unit))
   }
   def face(s: Solid, l: Length, select: TopoDS_Face => Boolean): OceOperation = {
     Chamfer.face(s, (f: TopoDS_Face) => if (select(f)) Some(l) else None)
@@ -82,16 +82,16 @@ object Chamfer {
 object ThickSolid {
   
   def apply(s: Solid, l: Length, toRemove: TopoDS_Shape => Iterable[TopoDS_Face]): OceOperation = {
-    OceOperation(s, shape => {
-      val mf = new utils.oce.ThickSolid(shape, l)
+    OceOperation(s, (shape, unit) => {
+      val mf = new utils.oce.ThickSolid(shape, l, unit = unit)
       mf.add(toRemove(shape))
       mf.result
     })
   }
   
   def face(s: Solid, l: Length, toRemove: TopoDS_Face => Boolean): OceOperation = {
-    OceOperation(s, shape => {
-      val mf = new utils.oce.ThickSolid(shape, l)
+    OceOperation(s, (shape, unit) => {
+      val mf = new utils.oce.ThickSolid(shape, l, unit = unit)
       for (f <- utils.oce.TopoExplorerUnique.faces(shape) if toRemove(f)) {
         mf.add(f)
       }
@@ -124,7 +124,7 @@ case class OceOffset(l: Length, s: Solid) extends Operation(Seq(s)) {
   //However, it does not always give the expeected result
   def distribute: Solid = distribute(l, s)
 
-  def asOceOperation: OceOperation = OceOperation(s, shape => (new utils.oce.Offset(shape, l)).result)
+  def asOceOperation: OceOperation = OceOperation(s, (shape, unit) => (new utils.oce.Offset(shape, l, unit = unit)).result)
 
 }
 

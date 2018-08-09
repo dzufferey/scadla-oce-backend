@@ -1,23 +1,22 @@
 package scadla.utils.oce
 
-import squants.space.{Length, Angle}
-import squants.space.Millimeters
+import squants.space.{Length, Millimeters, LengthUnit}
 import org.jcae.opencascade.jni._
 
-class Offset(solid: TopoDS_Shape, distance: Length, tolerance: Length = Millimeters(1e-7)) {
+class Offset(solid: TopoDS_Shape, distance: Length, tolerance: Length = Millimeters(1e-7), unit: LengthUnit = Millimeters) {
 
   def result = {
-    if (distance.toMillimeters == 0.0) {
+    if (distance.to(unit) == 0.0) {
       solid
     } else {
-      val mf = new BRepOffsetAPI_MakeOffsetShape(solid, distance.toMillimeters, tolerance.toMillimeters)
+      val mf = new BRepOffsetAPI_MakeOffsetShape(solid, distance.to(unit), tolerance.to(unit))
       mf.shape
     }
   }
 
 }
 
-class ThickSolid(solid: TopoDS_Shape, distance: Length, tolerance: Length = Millimeters(1e-7)) {
+class ThickSolid(solid: TopoDS_Shape, distance: Length, tolerance: Length = Millimeters(1e-7), unit: LengthUnit = Millimeters) {
 
   protected var faces: List[TopoDS_Face] = Nil
 
@@ -33,8 +32,8 @@ class ThickSolid(solid: TopoDS_Shape, distance: Length, tolerance: Length = Mill
     if (faces.isEmpty) {
       solid
     } else {
-      assert(distance.toMillimeters != 0.0)
-      val mf = new BRepOffsetAPI_MakeThickSolid(solid, faces.toArray, distance.toMillimeters, tolerance.toMillimeters)
+      assert(distance.to(unit) != 0.0)
+      val mf = new BRepOffsetAPI_MakeThickSolid(solid, faces.toArray, distance.to(unit), tolerance.to(unit))
       mf.shape
     }
   }
