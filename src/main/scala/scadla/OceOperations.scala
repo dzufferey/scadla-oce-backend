@@ -83,7 +83,7 @@ object ThickSolid {
   
   def apply(s: Solid, l: Length, toRemove: TopoDS_Shape => Iterable[TopoDS_Face]): OceOperation = {
     OceOperation(s, (shape, unit) => {
-      val mf = new utils.oce.ThickSolid(shape, l, unit = unit)
+      val mf = new utils.oce.ThickSolid(shape, l, unit)
       mf.add(toRemove(shape))
       mf.result
     })
@@ -91,7 +91,7 @@ object ThickSolid {
   
   def face(s: Solid, l: Length, toRemove: TopoDS_Face => Boolean): OceOperation = {
     OceOperation(s, (shape, unit) => {
-      val mf = new utils.oce.ThickSolid(shape, l, unit = unit)
+      val mf = new utils.oce.ThickSolid(shape, l, unit)
       for (f <- utils.oce.TopoExplorerUnique.faces(shape) if toRemove(f)) {
         mf.add(f)
       }
@@ -101,6 +101,7 @@ object ThickSolid {
 
 }
 
+//not directly an OceOperation as it tends to give error ...
 case class OceOffset(l: Length, s: Solid) extends Operation(Seq(s)) {
 
   def setChildren(c: Seq[Solid]) = {
@@ -124,7 +125,7 @@ case class OceOffset(l: Length, s: Solid) extends Operation(Seq(s)) {
   //However, it does not always give the expeected result
   def distribute: Solid = distribute(l, s)
 
-  def asOceOperation: OceOperation = OceOperation(s, (shape, unit) => (new utils.oce.Offset(shape, l, unit = unit)).result)
+  def asOceOperation: OceOperation = OceOperation(s, (shape, unit) => (new utils.oce.Offset(shape, l, unit)).result)
 
 }
 

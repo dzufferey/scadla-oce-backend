@@ -3,20 +3,20 @@ package scadla.utils.oce
 import squants.space.{Length, Millimeters, LengthUnit}
 import org.jcae.opencascade.jni._
 
-class Offset(solid: TopoDS_Shape, distance: Length, tolerance: Length = Millimeters(1e-7), unit: LengthUnit = Millimeters) {
+class Offset(solid: TopoDS_Shape, distance: Length, unit: LengthUnit = Millimeters, tolerance: Double = 1e-7) {
 
   def result = {
     if (distance.to(unit) == 0.0) {
       solid
     } else {
-      val mf = new BRepOffsetAPI_MakeOffsetShape(solid, distance.to(unit), tolerance.to(unit))
+      val mf = new BRepOffsetAPI_MakeOffsetShape(solid, distance.to(unit), tolerance)
       mf.shape
     }
   }
 
 }
 
-class ThickSolid(solid: TopoDS_Shape, distance: Length, tolerance: Length = Millimeters(1e-7), unit: LengthUnit = Millimeters) {
+class ThickSolid(solid: TopoDS_Shape, distance: Length, unit: LengthUnit = Millimeters, tolerance: Double = 1e-7) {
 
   protected var faces: List[TopoDS_Face] = Nil
 
@@ -33,7 +33,7 @@ class ThickSolid(solid: TopoDS_Shape, distance: Length, tolerance: Length = Mill
       solid
     } else {
       assert(distance.to(unit) != 0.0)
-      val mf = new BRepOffsetAPI_MakeThickSolid(solid, faces.toArray, distance.to(unit), tolerance.to(unit))
+      val mf = new BRepOffsetAPI_MakeThickSolid(solid, faces.toArray, distance.to(unit), tolerance)
       mf.shape
     }
   }
