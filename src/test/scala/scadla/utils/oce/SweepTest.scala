@@ -14,7 +14,7 @@ class PrismTest extends FunSuite {
   test("test 01") {
     val tree = Cube(1,1,1)
     val r = new OceRenderer
-    val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
+    val shape = r.render(tree)
     assert(shape.isValid)
     val shape2 = new Prism(shape, Vector(0, 0, 5, Millimeters)).result
     assert(shape2.isValid)
@@ -26,7 +26,7 @@ class PrismTest extends FunSuite {
   test("test 02") {
     val tree = Cube(1,1,1)
     val r = new OceRenderer
-    val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
+    val shape = r.render(tree)
     assert(shape.isValid)
     val shape2 = new Prism(shape, Vector(2, 0, 5, Millimeters)).result
     assert(shape2.isValid)
@@ -35,17 +35,28 @@ class PrismTest extends FunSuite {
     //Viewer.default(obj)
   }
 
-  /*
   test("test 03") {
-    val tree = Sphere(1)
+    val tree = Difference(Cylinder(1,1), Cylinder(0.8,1))
     val r = new OceRenderer
-    val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
+    val shape = r.render(tree)
     assert(shape.isValid)
-    val shape2 = new Prism(shape, Vector(0, 0, 5, Millimeters)).result
+    val shape2 = new Prism(shape, Vector(2, 0, 5, Millimeters)).result
     assert(shape2.isValid)
+    //r.toIGES(shape2, "test.igs")
     //val obj = r.toMesh(shape2)
     //Viewer.default(obj)
   }
-  */
+
+  test("test 04") {
+    val tree = Sphere(1)
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(shape.isValid)
+    val shape2 = new Prism(shape, Vector(0, 0, 5, Millimeters)).result
+    assert(shape2.isValid)
+    //r.toIGES(shape2, "test.igs")
+    //val obj = r.toMesh(shape2)
+    //Viewer.default(obj)
+  }
 
 }

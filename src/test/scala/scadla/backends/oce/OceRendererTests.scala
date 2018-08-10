@@ -86,4 +86,19 @@ class OceRendererTest extends FunSuite {
     render(h1)
   }
 
+  test("disjoint intersection") {
+    val tree = CenteredCube(2,2,2) * Sphere(1.0).moveX(5.0)
+    render(tree)
+  }
+
+  test("disjoint union") {
+    val tree = CenteredCube(2,2,2) + Sphere(1.0).moveX(5.0)
+    render(tree)
+  }
+
+  test("disjoint difference") {
+    val tree = CenteredCube(2,2,2) - Sphere(1.0).moveX(5.0)
+    render(tree)
+  }
+
 }
