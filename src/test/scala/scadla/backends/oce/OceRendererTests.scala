@@ -37,6 +37,8 @@ class OceRendererTest extends FunSuite {
 
   def render(s: Solid, show: Boolean = false) {
     val r = new OceRenderer
+    val shape = r.render(s)
+    assert(shape.isValid)
     val obj = r(s)
     if (show) {
       Viewer.default(obj)

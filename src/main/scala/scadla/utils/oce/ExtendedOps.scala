@@ -20,6 +20,8 @@ object ExtendedOps {
     def allShells = TopoExplorer.shells(lhs)
     def solids = TopoExplorerUnique.solids(lhs)
     def allSolids = TopoExplorer.solids(lhs)
+
+    def isValid = new BRepCheck_Analyzer(lhs).isValid()
   }
 
   implicit final class VertexOps(private val lhs: TopoDS_Vertex) extends AnyVal {

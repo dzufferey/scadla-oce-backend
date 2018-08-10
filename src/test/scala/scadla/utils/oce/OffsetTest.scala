@@ -21,7 +21,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -30,7 +30,7 @@ class OffsetTest extends FunSuite {
     val tree = scadla.Offset(0.3, Cube(3,3,3))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -39,7 +39,7 @@ class OffsetTest extends FunSuite {
     val tree = scadla.Offset(0.3, CenteredCube(3,3,3))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -48,7 +48,7 @@ class OffsetTest extends FunSuite {
     val tree = scadla.Offset(0.3, Sphere(1))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -57,7 +57,7 @@ class OffsetTest extends FunSuite {
     val tree = scadla.Offset(0.3, Translate(1.5, 0, 0, Sphere(1.0)))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -69,7 +69,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -81,7 +81,7 @@ class OffsetTest extends FunSuite {
     )
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -93,7 +93,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -105,7 +105,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -117,7 +117,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -129,7 +129,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -141,7 +141,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -153,7 +153,7 @@ class OffsetTest extends FunSuite {
     ))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }
@@ -162,7 +162,7 @@ class OffsetTest extends FunSuite {
     val tree = scadla.ThickSolid(Cube(3,3,3), 0.1, _.faces.take(2))
     val r = new OceRenderer
     val shape = r.render(tree)
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     //val obj = r.toMesh(shape)
     //Viewer.default(obj)
   }

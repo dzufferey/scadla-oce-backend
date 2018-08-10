@@ -136,3 +136,18 @@ object Offset {
   }
 
 }
+
+object LinearExtrude {
+
+  def apply(x: Length, y: Length, z: Length, s: Solid): OceOperation = {
+    val u = x.unit
+    apply(Vector(x to u, y to u, z to u, u), s)
+  }
+
+  def apply(direction: Vector, s: Solid): OceOperation = {
+    OceOperation(s, (shape, unit) => {
+      new utils.oce.Prism(shape, direction, unit).result
+    })
+  }
+
+}

@@ -1,12 +1,22 @@
 package scadla.utils
 
 import scadla._
-import squants.space.{Length, Angle, Area, Volume}
-import squants.space.Millimeters
+import squants.space.{LengthUnit, Length, Millimeters}
 import org.jcae.opencascade.jni._
 import oce.ExtendedOps._
+import java.io.BufferedWriter
 
 package object oce {
+
+  def copy[A <: TopoDS_Shape](shape: A, copyGeom: Boolean = true, copyMesh: Boolean = false): A = {
+    new BRepBuilderAPI_Copy(shape, copyGeom, copyMesh).shape().asInstanceOf[A]
+  }
+
+  def empty: TopoDS_Shape = {
+    val ms = new BRepBuilderAPI_MakeSolid()
+    ms.shape() //FIXME this returns null, find a better way, use Compound instead?
+  }
+
   def continuityToString(kind: GeomAbs_Shape) = kind match {
     case GeomAbs_Shape.C0 => "C0"
     case GeomAbs_Shape.G1 => "G1"
@@ -15,6 +25,18 @@ package object oce {
     case GeomAbs_Shape.C2 => "C2"
     case GeomAbs_Shape.C3 => "C3"
     case GeomAbs_Shape.CN => "CN"
+  }
+
+  def kindToString(kind: TopAbs_ShapeEnum) = kind match {
+    case TopAbs_ShapeEnum.SHAPE =>      "Shape"
+    case TopAbs_ShapeEnum.VERTEX =>     "Vertex"
+    case TopAbs_ShapeEnum.EDGE =>       "Edge"
+    case TopAbs_ShapeEnum.WIRE =>       "Wire"
+    case TopAbs_ShapeEnum.FACE =>       "Face"
+    case TopAbs_ShapeEnum.SHELL =>      "Shell"
+    case TopAbs_ShapeEnum.SOLID =>      "Solid"
+    case TopAbs_ShapeEnum.COMPSOLID =>  "CompSolid"
+    case TopAbs_ShapeEnum.COMPOUND =>   "Compound"
   }
 
   def kindToString(kind: GeomAbs_CurveType) = kind match {
@@ -42,20 +64,27 @@ package object oce {
     case GeomAbs_SurfaceType.GeomAbs_OtherSurface =>          "OtherSurface"
   }
 
+  def hasGeometry(shape: TopoDS_Shape) = shape.shapeType match {
+    case TopAbs_ShapeEnum.EDGE | 
+         TopAbs_ShapeEnum.WIRE |
+         TopAbs_ShapeEnum.FACE => true
+    case _ => false
+  }
 
-  def toPoint(p: Array[Double]) = Point(Millimeters(p(0)), Millimeters(p(1)), Millimeters(p(2)))
+  def toPoint(p: Array[Double], unit: LengthUnit) = Point(unit(p(0)), unit(p(1)), unit(p(2)))
   
-  def toVector(p: Array[Double]) = Vector(p(0), p(1), p(2), Millimeters)
+  def toVector(p: Array[Double], unit: LengthUnit) = Vector(p(0), p(1), p(2), unit)
 
   def connectedAndSameDirection(c1: Adaptor3d_Curve, c2: Adaptor3d_Curve, toleranceP: Double = 1e-7, toleranceD: Double = 1e-1) = {
+    val unit = Millimeters //actual unit does not matter
     val p1 = Array.ofDim[Double](3)
     val d1 = Array.ofDim[Double](3)
     c1.d1(c1.lastParameter, p1, d1)
     val p2 = Array.ofDim[Double](3)
     val d2 = Array.ofDim[Double](3)
     c2.d1(c2.firstParameter, p2, d2)
-    (toPoint(p1) to toPoint(p2)).norm <= Millimeters(toleranceP) &&
-    (toVector(d1).toUnitVector - toVector(d2).toUnitVector).norm <= Millimeters(toleranceD)
+    (toPoint(p1, unit) to toPoint(p2, unit)).norm <= unit(toleranceP) &&
+    (toVector(d1, unit).toUnitVector - toVector(d2, unit).toUnitVector).norm <= unit(toleranceD)
   }
 
   def atLeastC1(g: GeomAbs_Shape) = g match {

@@ -1,7 +1,8 @@
 package scadla.backends.oce
 
 import scadla._
-import scadla.utils.oce.TopoExplorerUnique
+import scadla.utils.oce.empty
+import scadla.utils.oce.ExtendedOps._
 import scadla.backends.RendererAux
 import squants.space._
 import org.jcae.opencascade.jni._
@@ -32,8 +33,6 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     case OceShape(s) => s
     case s => sys.error("oce backend does not support " + s)
   }
-
-  def empty = new BRepBuilderAPI_MakeSolid().shape()
 
   def polyhedron(p: Polyhedron): TopoDS_Shape = {
     if (p.faces.isEmpty) {
@@ -141,14 +140,20 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     case _: Union => union(args)
     case _: Intersection => intersection(args)
     case _: Difference => difference(args.head, args.tail)
-    case OceOperation(_, op) => op(args.head, unit)
+    case OceOperation(_, op) =>
+      val shape = args.head
+      if (shape == null) {
+        empty
+      } else {
+        op(shape, unit)
+      }
     case offset @ OceOffset(_, _) =>
       try {
           val shape = offset.asOceOperation.op(args.head, unit)
-          if (new BRepCheck_Analyzer(shape).isValid) {
+          if (shape.isValid) {
             shape
           } else {
-            Logger("OceRenderer", Warning, "Offset pproduced an invalid shape trying fallback (distribute operation)")
+            Logger("OceRenderer", Warning, "Offset produced an invalid shape trying fallback (distribute operation)")
             render(offset.distribute)
           }
       } catch {
@@ -159,7 +164,8 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     case o => sys.error("oce backend does not support " + o)
   }
 
-  def union(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
+  def union(_objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
+    val objs = _objs.filter(_ != null)
     if (objs.length == 0) {
       empty
     } else if (objs.length == 1) {
@@ -170,7 +176,7 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
   }
 
   def intersection(objs: Seq[TopoDS_Shape]): TopoDS_Shape = {
-    if (objs.length == 0) {
+    if (objs.length == 0 || objs.exists(_ == null)) {
       empty
     } else if (objs.length == 1) {
       objs.head
@@ -180,64 +186,76 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
   }
 
   def difference(pos: TopoDS_Shape, negs: Seq[TopoDS_Shape]): TopoDS_Shape = {
-    negs.foldLeft(pos)( (p,n) => new BRepAlgoAPI_Cut(p, n).shape() )
+    if (pos == null) {
+      empty
+    } else {
+      negs.foldLeft(pos)( (p,n) => if (n == null) p else new BRepAlgoAPI_Cut(p, n).shape() )
+    }
   }
 
 
   def transform(t: Transform, obj: TopoDS_Shape) = {
-    val m = t.matrix
-    val trsf = new GP_Trsf
-    trsf.setValues(m.m00, m.m01, m.m02, m.m03,
-                   m.m10, m.m11, m.m12, m.m13,
-                   m.m20, m.m21, m.m22, m.m23)
-    assert(m.m30 == 0.0 && m.m31 == 0.0 && m.m32 == 0.0 && m.m33 == 1.0)
-    new BRepBuilderAPI_Transform(obj, trsf).shape
+    if (obj == null) {
+      empty
+    } else {
+      val m = t.matrix
+      val trsf = new GP_Trsf
+      trsf.setValues(m.m00, m.m01, m.m02, m.m03,
+                     m.m10, m.m11, m.m12, m.m13,
+                     m.m20, m.m21, m.m22, m.m23)
+      assert(m.m30 == 0.0 && m.m31 == 0.0 && m.m32 == 0.0 && m.m33 == 1.0)
+      new BRepBuilderAPI_Transform(obj, trsf, true).shape
+    }
   }
 
 
   def toMesh(shape: TopoDS_Shape): Polyhedron = {
-    BRepTools.clean(shape)
-    val mesher = new BRepMesh_IncrementalMesh(shape, deviation)
-    val builder = Seq.newBuilder[Face]
-    val explorer = TopoExplorerUnique.faces(shape)
-    while(explorer.hasNext) {
-      val face = explorer.next
-      val loc = new TopLoc_Location
-      val tri = BRep_Tool.triangulation(face, loc)
-      val nodes = tri.nodes
-      val nPnt = nodes.size / 3
-      var i = 0
-      val tmp = Array.ofDim[Double](3)
-      val pnt = Array.ofDim[Point](nPnt)
-      while (i < nPnt) {
-        tmp(0) = nodes(3*i)
-        tmp(1) = nodes(3*i+1)
-        tmp(2) = nodes(3*i+2)
-        val trf = loc.transformation
-        trf.transforms(tmp)
-        pnt(i) = Point(unit(tmp(0)), unit(tmp(1)), unit(tmp(2)))
-        i += 1
-      }
-      def getFace(index: Int) = {
-        if (face.orientation == TopAbs_Orientation.FORWARD) {
-          Face(pnt(tri.triangles()(3*index  )),
-               pnt(tri.triangles()(3*index+1)),
-               pnt(tri.triangles()(3*index+2)))
-        } else {
-          Face(pnt(tri.triangles()(3*index+1)),
-               pnt(tri.triangles()(3*index  )),
-               pnt(tri.triangles()(3*index+2)))
+    if (shape == null) {
+      Polyhedron(Seq())
+    } else {
+      BRepTools.clean(shape)
+      val mesher = new BRepMesh_IncrementalMesh(shape, deviation)
+      val builder = Seq.newBuilder[Face]
+      val explorer = shape.faces
+      while(explorer.hasNext) {
+        val face = explorer.next
+        val loc = new TopLoc_Location
+        val tri = BRep_Tool.triangulation(face, loc)
+        val nodes = tri.nodes
+        val nPnt = nodes.size / 3
+        var i = 0
+        val tmp = Array.ofDim[Double](3)
+        val pnt = Array.ofDim[Point](nPnt)
+        while (i < nPnt) {
+          tmp(0) = nodes(3*i)
+          tmp(1) = nodes(3*i+1)
+          tmp(2) = nodes(3*i+2)
+          val trf = loc.transformation
+          trf.transforms(tmp)
+          pnt(i) = Point(unit(tmp(0)), unit(tmp(1)), unit(tmp(2)))
+          i += 1
+        }
+        def getFace(index: Int) = {
+          if (face.orientation == TopAbs_Orientation.FORWARD) {
+            Face(pnt(tri.triangles()(3*index  )),
+                 pnt(tri.triangles()(3*index+1)),
+                 pnt(tri.triangles()(3*index+2)))
+          } else {
+            Face(pnt(tri.triangles()(3*index+1)),
+                 pnt(tri.triangles()(3*index  )),
+                 pnt(tri.triangles()(3*index+2)))
+          }
+        }
+        val triangles = tri.triangles
+        val nTri = triangles.size / 3
+        i = 0
+        while (i < nTri) {
+          builder += getFace(i)
+          i += 1
         }
       }
-      val triangles = tri.triangles
-      val nTri = triangles.size / 3
-      i = 0
-      while (i < nTri) {
-        builder += getFace(i)
-        i += 1
-      }
+      Polyhedron(builder.result)
     }
-    Polyhedron(builder.result)
   }
 
   def toSTEP(obj: TopoDS_Shape, outputFile: String) {
