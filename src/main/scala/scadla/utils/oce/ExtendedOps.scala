@@ -1,7 +1,7 @@
 package scadla.utils.oce
 
 import scadla._
-import squants.space.{Length, Angle, Area, Volume}
+import squants.space.{Length, Angle, Area, Volume, VolumeUnit}
 import squants.space.{Millimeters, Microlitres}
 import org.jcae.opencascade.jni._
 
@@ -335,10 +335,10 @@ object ExtendedOps {
       TopoExplorerUnique.wires(lhs)
     }
 
-    def volume: Volume = {
+    def volume(unit: VolumeUnit = Microlitres): Volume = {
       val prop = new GProp_GProps()
       BRepGProp.volumeProperties(lhs, prop)
-      Microlitres(prop.mass)
+      unit(prop.mass)
     }
 
   }

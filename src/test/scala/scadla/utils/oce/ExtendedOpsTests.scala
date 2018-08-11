@@ -43,7 +43,7 @@ class ExtendedOpsTest extends FunSuite {
       assert(a ≈ expected)
     }
     for (s <- TopoExplorer.solids(box)) {
-      val v = s.volume
+      val v = s.volume()
       assert(v ≈ ((5 mm) * (10 mm) * (20 mm)))
     }
   }

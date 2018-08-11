@@ -35,6 +35,7 @@ class PrismTest extends FunSuite {
     //Viewer.default(obj)
   }
 
+  //TODO not the expected result ...
   test("test 03") {
     val tree = Difference(Cylinder(1,1), Cylinder(0.8,1))
     val r = new OceRenderer

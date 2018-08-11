@@ -6,9 +6,11 @@ import org.jcae.opencascade.Utilities
 import scadla.{Point, Vector}
 import dzufferey.utils._
 import dzufferey.utils.LogLevel._
-import ExtendedOps.ShapeOps
+import ExtendedOps._
 
-abstract class Sweep(shape: TopoDS_Shape) {
+abstract class Sweep(shape: TopoDS_Shape, unit: LengthUnit) {
+
+  protected val volumeUnit = (unit(1) * unit(1) * unit(1)).unit
 
   protected def process(s: TopoDS_Shape): TopoDS_Shape
 
@@ -47,22 +49,32 @@ abstract class Sweep(shape: TopoDS_Shape) {
       null
     } else {
       val res = fuser.shape()
+      if (res.isValid) {
+        Logger("scadla.utils.oce.Sweep", Debug, "fuse OK")
+        res
+      } else {
+        Logger("scadla.utils.oce.Sweep", Error, "fuse result is invalid, throwing shapes out and hoping for the best")
+        empty
+      }
       //Logger("scadla.utils.oce.Sweep", Notice, "===========")
       //Logger("scadla.utils.oce.Sweep", Notice, "fuse result")
       //Utilities.dumpTopology(res, Console.out)
-      res
     }
   }
-  
+
   protected def reduce(shapes: Iterator[TopoDS_Shape]): TopoDS_Shape = {
+    val solids = shapes.flatMap(_.solids)
     var acc: TopoDS_Shape = null
-    while (shapes.hasNext) { 
-      var n = shapes.next
+    while (solids.hasNext) {
+      var n = solids.next
       if (n.isValid) {
-        if (n.shapeType == TopAbs_ShapeEnum.COMPSOLID) {
-          n = reduce(n.solids)
+        val vol = n.asInstanceOf[TopoDS_Solid].volume(volumeUnit)
+        Logger("scadla.utils.oce.Sweep", Debug, "solid with volume "+vol)
+        if ( vol > volumeUnit(0.0) ) {
+          acc = if (acc == null) n else fuse(acc, n)
+        } else {
+          Logger("scadla.utils.oce.Sweep", Notice, "degenerated solid, skipping")
         }
-        acc = if (acc == null) n else fuse(acc, n)
       } else {
         Logger("scadla.utils.oce.Sweep", Notice, "invalid shape, skipping")
       }
@@ -82,7 +94,7 @@ abstract class Sweep(shape: TopoDS_Shape) {
   }
 }
 
-class Prism(shape: TopoDS_Shape, direction: Vector, unit: LengthUnit = Millimeters) extends Sweep(shape) {
+class Prism(shape: TopoDS_Shape, direction: Vector, unit: LengthUnit = Millimeters) extends Sweep(shape, unit) {
     
   assert((direction.norm to unit) > 0.0, "direction ill-defined")
   protected val dir = Array[Double](direction.x to unit, direction.y to unit, direction.z to unit)
@@ -104,7 +116,7 @@ class Prism(shape: TopoDS_Shape, direction: Vector, unit: LengthUnit = Millimete
 
 }
 
-class Revolution(shape: TopoDS_Shape, axis: Vector, angle: Angle, unit: LengthUnit = Millimeters) extends Sweep(shape) {
+class Revolution(shape: TopoDS_Shape, axis: Vector, angle: Angle, unit: LengthUnit = Millimeters) extends Sweep(shape, unit) {
 
   protected val a = {
     assert((axis.norm to unit) > 0.0, "axis ill-defined")
@@ -128,7 +140,7 @@ class Revolution(shape: TopoDS_Shape, axis: Vector, angle: Angle, unit: LengthUn
 }
 
 //points in the spine may have a tangent vectors
-class Pipe(shape: TopoDS_Shape, spine: Seq[(Point,Option[Vector])], unit: LengthUnit = Millimeters, tolerance: Double = 1e-7) extends Sweep(shape) {
+class Pipe(shape: TopoDS_Shape, spine: Seq[(Point,Option[Vector])], unit: LengthUnit = Millimeters, tolerance: Double = 1e-7) extends Sweep(shape, unit) {
 
   val wire = {
     val points = Array.ofDim[Double](3 * spine.size)
