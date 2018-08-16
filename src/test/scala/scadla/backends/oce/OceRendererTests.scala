@@ -101,4 +101,11 @@ class OceRendererTest extends FunSuite {
     render(tree)
   }
 
+  test("releaux triangle") {
+    val r = 10
+    val s = Sphere(r)
+    val tree = s.moveX(-r/2) * s.moveX(r/2) * s.move(0, r/2 * math.sqrt(3),0) * s.move(0, r/2 / math.sqrt(3), r/2 * math.sqrt(3))
+    render(tree)
+  }
+
 }
