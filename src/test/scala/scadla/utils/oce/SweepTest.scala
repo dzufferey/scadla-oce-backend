@@ -61,3 +61,20 @@ class PrismTest extends FunSuite {
   }
 
 }
+
+class RevolutionTest extends FunSuite {
+
+  //TODO not the expected result ...
+  test("test 01") {
+    val tree = Cube(1,1,1)
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(shape.isValid)
+    val shape2 = new Revolution(shape, Vector(0, 0, 5, Millimeters), 1.0).result
+    assert(shape2.isValid)
+    //r.toIGES(shape2, "test.igs")
+    //val obj = r.toMesh(shape2)
+    //Viewer.default(obj)
+  }
+
+}

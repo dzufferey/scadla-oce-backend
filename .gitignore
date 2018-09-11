@@ -4,6 +4,11 @@
 # model and G-code
 *.stl
 *.gco
+*.igs
+*.iges
+*.stp
+*.step
+*.brep
 
 # sbt specific
 .cache/

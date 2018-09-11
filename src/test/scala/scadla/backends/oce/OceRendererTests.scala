@@ -42,7 +42,7 @@ class OceRendererTest extends FunSuite {
     val obj = r(s)
     if (show) {
       Viewer.default(obj)
-      //r.toIGES(s, "test.igs")
+      r.toIGES(s, "test.igs")
       //r.toSTEP(s, "test.stp")
     }
   }
@@ -56,7 +56,7 @@ class OceRendererTest extends FunSuite {
                                           l <- w.subLoops if l.c1Continuous;
                                           e <- l.edges ) yield e )
     }
-    render(tree)
+    render(tree, false)
   }
 
   test("test 02") {

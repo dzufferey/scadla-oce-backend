@@ -116,12 +116,15 @@ class Prism(shape: TopoDS_Shape, direction: Vector, unit: LengthUnit = Millimete
 
 }
 
-class Revolution(shape: TopoDS_Shape, axis: Vector, angle: Angle, unit: LengthUnit = Millimeters) extends Sweep(shape, unit) {
+class Revolution(shape: TopoDS_Shape, axis: Vector, angle: Angle,
+                 origin: Point = new Point(Millimeters(0), Millimeters(0), Millimeters(0)),
+                 unit: LengthUnit = Millimeters) extends Sweep(shape, unit) {
 
   protected val a = {
     assert((axis.norm to unit) > 0.0, "axis ill-defined")
     val u = (axis to unit).toUnitVector
-    Array[Double](u.x to unit, u.y to unit, u.z to unit)
+    Array[Double](origin.x to unit, origin.y to unit, origin.z to unit,
+                  u.x to unit, u.y to unit, u.z to unit)
   }
 
   protected def process(shape: TopoDS_Shape) = {
