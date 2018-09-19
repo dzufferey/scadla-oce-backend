@@ -5,9 +5,9 @@ import scadla.InlineOps._
 import scadla.backends.Viewer
 import scadla.utils.CenteredCube
 import scadla.utils.oce.ExtendedOps._
-import scadla.utils.oce.{Fillet => _, Chamfer => _, _}
+import scadla.utils.oce.{Fillet => _, Chamfer => _, Offset => _, _}
 import org.scalatest._
-import squants.space.Length
+import squants.space.{Length, Millimeters, SquareCentimeters}
 import scadla.EverythingIsIn.{millimeters, radians}
 import org.jcae.opencascade.jni._
 
@@ -106,6 +106,25 @@ class OceRendererTest extends FunSuite {
     val s = Sphere(r)
     val tree = s.moveX(-r/2) * s.moveX(r/2) * s.move(0, r/2 * math.sqrt(3),0) * s.move(0, r/2 / math.sqrt(3), r/2 * math.sqrt(3))
     render(tree)
+  }
+
+  test("a more complex example") {
+    implicit val tolerance = Millimeters(1e-3)
+    //
+    val drain = CenteredCube(8, 8, 10).rotateZ(math.Pi/4)
+    val c1 = Offset(2, CenteredCube.xy(28, 36, 140)) + drain.moveY(-10) + drain.moveY(10)
+    val c2 = Offset(2, CenteredCube.xy(38, 52, 140)) + drain.move(-8, -12, 0) + drain.move(-8, 12, 0) + drain.move(8, -12, 0) + drain.move(8, 12, 0)
+    //
+    val screwRadius = 2
+    val screw = Cylinder(screwRadius, 15).rotateX(-math.Pi/2)
+    val base = Cylinder(20, 120).moveY(-7) * Cube(40, 10, 120).moveX(-20) - screw.moveZ(25) - screw.moveZ(105)
+    val unitY = Vector(0,1,0,Millimeters)
+    val back = Chamfer(base, screwRadius, (face, edge) => face.normal().dot(unitY).to(SquareCentimeters) > 0 && edge.isClosed)
+    //
+    val plate = Offset( 5, Cube(80, 61, 1).moveX(-40))
+    val overall = back.moveY(-5) + plate + plate.moveZ(119) - c1.move(22, 35, 0) - c2.move(-18, 33, 0)
+    //
+    render(overall, false)
   }
 
 }

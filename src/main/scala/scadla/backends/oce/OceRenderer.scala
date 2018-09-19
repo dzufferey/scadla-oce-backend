@@ -198,6 +198,7 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     if (obj == null) {
       empty
     } else {
+      //TODO actually only handles translation, rotation, and _uniform_ scaling
       val m = t.matrix
       val trsf = new GP_Trsf
       trsf.setValues(m.m00, m.m01, m.m02, m.m03,
