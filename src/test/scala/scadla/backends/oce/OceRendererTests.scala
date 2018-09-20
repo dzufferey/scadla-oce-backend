@@ -39,11 +39,12 @@ class OceRendererTest extends FunSuite {
     val r = new OceRenderer
     val shape = r.render(s)
     assert(shape.isValid)
-    val obj = r(s)
     if (show) {
+      val obj = r.toMesh(shape)
       Viewer.default(obj)
       r.toIGES(s, "test.igs")
       //r.toSTEP(s, "test.stp")
+      scadla.backends.stl.Printer.storeBinary(obj, "test.stl")
     }
   }
 
@@ -84,6 +85,11 @@ class OceRendererTest extends FunSuite {
         s.edges.filter(checkAngles)
       })
     render(h1)
+  }
+
+  test("test 05") {
+    val tree = Fillet(Cube(1,1,1), 2, (_: TopoDS_Edge) => true)
+    render(tree)
   }
 
   test("disjoint intersection") {

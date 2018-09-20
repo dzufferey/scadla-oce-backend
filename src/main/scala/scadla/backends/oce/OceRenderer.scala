@@ -16,6 +16,10 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
   override def isSupported(s: Solid): Boolean = s match {
     case OceShape(_) => true
     case s: Shape => super.isSupported(s)
+    case t: Translate => super.isSupported(t)
+    case t: Rotate => super.isSupported(t)
+    case t: Mirror => super.isSupported(t)
+    case t @ Scale(x, y, z, _) => x == y && y == z && super.isSupported(t)
     case t: Transform => super.isSupported(t)
     case OceOffset(_, s) => isSupported(s)
     case OceOperation(s, _) => isSupported(s)
@@ -198,7 +202,6 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     if (obj == null) {
       empty
     } else {
-      //TODO actually only handles translation, rotation, and _uniform_ scaling
       val m = t.matrix
       val trsf = new GP_Trsf
       trsf.setValues(m.m00, m.m01, m.m02, m.m03,
@@ -206,6 +209,22 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
                      m.m20, m.m21, m.m22, m.m23)
       assert(m.m30 == 0.0 && m.m31 == 0.0 && m.m32 == 0.0 && m.m33 == 1.0)
       new BRepBuilderAPI_Transform(obj, trsf, true).shape
+    }
+  }
+
+  override def render(s: Solid): TopoDS_Shape = {
+    try {
+      val result = super.render(s)
+      if (result.isValid) {
+        result
+      } else {
+        Logger("OceRenderer", Error, "Error in rendering " + s.getClass + "\n  " + s.trace.mkString("\n  "))
+        empty
+      }
+    } catch {
+      case e: java.lang.Exception =>
+        Logger("OceRenderer", Error, "Error in rendering " + s.getClass + " (" + e.getMessage + "):\n  " + s.trace.mkString("\n  "))
+        empty
     }
   }
 

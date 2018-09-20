@@ -5,7 +5,7 @@ import org.jcae.opencascade.jni._
 
 class Chamfer(solid: TopoDS_Shape, unit: LengthUnit = Millimeters) {
 
-  protected val mf = new BRepFilletAPI_MakeChamfer(solid)
+  protected val mf = if (solid != null) new BRepFilletAPI_MakeChamfer(solid) else null
   protected var trivial = true
 
   def add(face: TopoDS_Face, edge: TopoDS_Edge, dist: Length) = {
@@ -14,8 +14,16 @@ class Chamfer(solid: TopoDS_Shape, unit: LengthUnit = Millimeters) {
   }
 
   def result = {
-    if (trivial) solid
-    else mf.shape
+    if (trivial) {
+      solid
+    } else {
+      val res = mf.shape
+      if (res == null) {
+        sys.error("Chamfer failed")
+      } else {
+        res
+      }
+    }
   }
 
 }
