@@ -114,7 +114,7 @@ class OceRendererTest extends FunSuite {
     render(tree)
   }
 
-  test("a more complex example") {
+  test("a more complex example 1") {
     implicit val tolerance = Millimeters(1e-3)
     //
     val drain = CenteredCube(8, 8, 10).rotateZ(math.Pi/4)
@@ -130,6 +130,53 @@ class OceRendererTest extends FunSuite {
     val plate = Offset( 5, Cube(80, 61, 1).moveX(-40))
     val overall = back.moveY(-5) + plate + plate.moveZ(119) - c1.move(22, 35, 0) - c2.move(-18, 33, 0)
     //
+    render(overall, false)
+  }
+
+  test("a more complex example 2") {
+    implicit val tolerance = Millimeters(1e-3)
+    //
+    val x = 200
+    val y = 400
+    val z1 = 3
+    val z2 = 5
+    val gap = 5
+    val border = 8
+    val radius = 2
+    val splineWidth = 2 * radius + 1
+    val splineGap = splineWidth + 8
+    val angle = math.Pi / 4
+    //
+    val tb = Cube(x, border, z2)
+    val lr = Cube(border, y, z2)
+    val frame1 = tb + tb.moveY(y - border) + lr + lr.moveX(x - border) + Cube(x, y, z1)
+    //val frame = Fillet(frame1, radius/2, edge => edge.point(0.5).z >= z2) //FIXME makes the JVM segfault!!!
+    def isCorner(edge: TopoDS_Edge) = {
+      val p = edge.point(0.5)
+      (p.x <= 0 || p.x >= x) && (p.y <= 0 || p.y >= y)
+    }
+    /*
+    def isCorner2(edge: TopoDS_Edge) = {
+      val p = edge.point(0.5)
+      (p.x <= border/2 || p.x >= x-border/2) && (p.y <= border/2 || p.y >= y-border/2) && p.z >= z2
+    }
+    */
+    val frame = Fillet(frame1, 2*radius, isCorner)
+    //val frame = Fillet(frame2, radius, isCorner2)
+    //
+    val splineArea = Cube(x - 2*border - 2*gap, y - 2*border - 2*gap, z2).move(border + gap, border + gap, 0)
+    val spline = Cube(x / math.cos(angle), splineWidth, z2).rotateZ(-angle)
+    var splines: List[Solid] = Nil
+    var i = border + gap + splineWidth - 3 //XXX fiddle around to avoid the error during the fillet, we are still loosing two of them ...
+    val yMax = y + x / math.tan(angle) - splineWidth
+    while (i <= yMax) {
+      val s = spline.moveY(i) * splineArea
+      val f = Fillet(s, radius, edge => edge.point(0.5).z >= z2)
+      splines ::= f
+      i += splineGap
+    }
+    //
+    val overall = frame ++ splines
     render(overall, false)
   }
 

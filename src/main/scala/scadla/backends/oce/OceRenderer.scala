@@ -149,7 +149,19 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
       if (shape == null) {
         empty
       } else {
-        op(shape, unit)
+        try {
+          val result = op(shape, unit)
+          if (result.isValid) {
+            result
+          } else {
+            Logger("OceRenderer", Error, "Error in rendering " + o.getClass + "\n  " + o.trace.mkString("\n  "))
+            shape
+          }
+        } catch {
+          case e: java.lang.Exception =>
+            Logger("OceRenderer", Error, "Error in rendering " + o.getClass + " (" + e.getMessage + "):\n  " + o.trace.mkString("\n  "))
+            shape
+        }
       }
     case offset @ OceOffset(_, _) =>
       try {
@@ -211,23 +223,6 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
       new BRepBuilderAPI_Transform(obj, trsf, true).shape
     }
   }
-
-  override def render(s: Solid): TopoDS_Shape = {
-    try {
-      val result = super.render(s)
-      if (result.isValid) {
-        result
-      } else {
-        Logger("OceRenderer", Error, "Error in rendering " + s.getClass + "\n  " + s.trace.mkString("\n  "))
-        empty
-      }
-    } catch {
-      case e: java.lang.Exception =>
-        Logger("OceRenderer", Error, "Error in rendering " + s.getClass + " (" + e.getMessage + "):\n  " + s.trace.mkString("\n  "))
-        empty
-    }
-  }
-
 
   def toMesh(shape: TopoDS_Shape): Polyhedron = {
     if (shape == null) {
