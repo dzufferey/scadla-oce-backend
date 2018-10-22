@@ -9,6 +9,7 @@
 *.stp
 *.step
 *.brep
+*.obj
 
 # sbt specific
 .cache/

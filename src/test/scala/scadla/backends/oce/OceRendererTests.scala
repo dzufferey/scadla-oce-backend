@@ -136,15 +136,15 @@ class OceRendererTest extends FunSuite {
   test("a more complex example 2") {
     implicit val tolerance = Millimeters(1e-3)
     //
-    val x = 200
-    val y = 400
+    val x = 350
+    val y = 250
     val z1 = 3
     val z2 = 5
-    val gap = 5
-    val border = 8
+    val gap = 3
+    val border = 5
     val radius = 2
     val splineWidth = 2 * radius + 1
-    val splineGap = splineWidth + 8
+    val splineGap = splineWidth + 6
     val angle = math.Pi / 4
     //
     val tb = Cube(x, border, z2)
@@ -177,7 +177,11 @@ class OceRendererTest extends FunSuite {
     }
     //
     val overall = frame ++ splines
-    render(overall, false)
+    //render(overall, true)
+    // negative
+    val box = Cube(x + 20, y + 20, z2 + 1).move(-10, -10, 0)
+    val diff = box - overall
+    render(diff, false)
   }
 
 }
