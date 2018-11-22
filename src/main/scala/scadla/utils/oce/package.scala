@@ -125,4 +125,14 @@ package object oce {
 
   def c1Continuous(edges: Iterable[TopoDS_Edge]): Boolean = c1Continuous(edges.iterator)
 
+  // return [a,b,c,d] with ax + by + cx + d = 0
+  def planeCoeff(point: Point, normal: Vector, unit: LengthUnit): Array[Double] = {
+    val n = normal.to(unit).toUnitVector
+    val a = n.x.to(unit)
+    val b = n.y.to(unit)
+    val c = n.z.to(unit)
+    val d = -1 * (a * point.x + b * point.y + c * point.z).to(unit)
+    Array[Double](a, b, c, d)
+  }
+
 }
