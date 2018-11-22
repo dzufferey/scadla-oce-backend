@@ -5,8 +5,9 @@ import scadla.InlineOps._
 import scadla.backends.Viewer
 import scadla.utils.CenteredCube
 import scadla.utils.oce.ExtendedOps._
+import scadla.utils.oce.{Fillet => _, Chamfer => _, Offset => _, _}
 import org.scalatest._
-import squants.space.Length
+import squants.space.{Length, Millimeters, SquareCentimeters}
 import scadla.EverythingIsIn.{millimeters, radians}
 import org.jcae.opencascade.jni._
 
@@ -25,33 +26,162 @@ class OceRendererTest extends FunSuite {
     assert(obj.faces.forall{ case Face(p0,p1,p2) => unitPoint(p1) && unitPoint(p2) && unitPoint(p0) })
   }
 
-  def renderAndShow(s: Solid) {
+  test("rendering a sphere") {
     val r = new OceRenderer
-    val obj = r(s)
-    Viewer.default(obj)
+    val obj = r(Sphere(1))
+    def unitPoint(p: Point): Boolean = {
+      (p.toVector.norm.toMillimeters - 1) <= 1e-3
+    }
+    assert(obj.faces.forall{ case Face(p0,p1,p2) => unitPoint(p1) && unitPoint(p2) && unitPoint(p0) })
   }
 
-/*
+  def render(s: Solid, show: Boolean = false) {
+    val r = new OceRenderer
+    val shape = r.render(s)
+    assert(shape.isValid)
+    if (show) {
+      val obj = r.toMesh(shape)
+      Viewer.default(obj)
+      r.toIGES(s, "test.igs")
+      //r.toSTEP(s, "test.stp")
+      scadla.backends.stl.Printer.storeBinary(obj, "test.stl")
+    }
+  }
+
   test("test 01") {
     val tree = {
-      val center = CenteredCube(5.0,5.0,5.0) * Sphere(2.0)
+      val center = CenteredCube(3.2,3.2,3.2) * Sphere(2.0)
       val c = Translate(0,0,-3, Cylinder(1.0, 6.0))
       val carved = center - c - c.rotateX(math.Pi/2) - c.rotateY(math.Pi/2)
-      Fillet(carved, 0.1, _.isClosed)
+      Fillet.shape(carved, 0.1, s => for( w <- s.wires;
+                                          l <- w.subLoops if l.c1Continuous;
+                                          e <- l.edges ) yield e )
     }
-    renderAndShow(tree)
+    render(tree, false)
   }
-*/
-/*
+
   test("test 02") {
     val tree = Fillet(Cube(1,1,1), 0.2, (_: TopoDS_Edge) => true)
-    renderAndShow(tree)
+    render(tree)
   }
-*/
-/*
+
   test("test 03") {
     val tree = Chamfer(Cube(1,1,1), 0.2, (_: TopoDS_Face, _: TopoDS_Edge) => true)
-    renderAndShow(tree)
+    render(tree)
   }
-*/
+
+  test("test 04") {
+    val h = scadla.utils.extrusion.H(20, 20, 3)(100)
+    val h1 = Fillet.shape(h, 1, s => {
+        def checkAngles(e: TopoDS_Edge) = {
+          implicit val tolerance: Length = 1e-3
+          val fs = e.adjacentFacesIn(s)
+          val n1 = fs.next.normal()
+          val f2 = fs.next
+          assert(!fs.hasNext)
+          val p1 = e.start.asPoint + n1
+          f2.pointOnFace(p1)
+        }
+        s.edges.filter(checkAngles)
+      })
+    render(h1)
+  }
+
+  test("test 05") {
+    val tree = Fillet(Cube(1,1,1), 2, (_: TopoDS_Edge) => true)
+    render(tree)
+  }
+
+  test("disjoint intersection") {
+    val tree = CenteredCube(2,2,2) * Sphere(1.0).moveX(5.0)
+    render(tree)
+  }
+
+  test("disjoint union") {
+    val tree = CenteredCube(2,2,2) + Sphere(1.0).moveX(5.0)
+    render(tree)
+  }
+
+  test("disjoint difference") {
+    val tree = CenteredCube(2,2,2) - Sphere(1.0).moveX(5.0)
+    render(tree)
+  }
+
+  test("releaux triangle") {
+    val r = 10
+    val s = Sphere(r)
+    val tree = s.moveX(-r/2) * s.moveX(r/2) * s.move(0, r/2 * math.sqrt(3),0) * s.move(0, r/2 / math.sqrt(3), r/2 * math.sqrt(3))
+    render(tree)
+  }
+
+  test("a more complex example 1") {
+    implicit val tolerance = Millimeters(1e-3)
+    //
+    val drain = CenteredCube(8, 8, 10).rotateZ(math.Pi/4)
+    val c1 = Offset(2, CenteredCube.xy(28, 36, 140)) + drain.moveY(-10) + drain.moveY(10)
+    val c2 = Offset(2, CenteredCube.xy(38, 52, 140)) + drain.move(-8, -12, 0) + drain.move(-8, 12, 0) + drain.move(8, -12, 0) + drain.move(8, 12, 0)
+    //
+    val screwRadius = 2
+    val screw = Cylinder(screwRadius, 15).rotateX(-math.Pi/2)
+    val base = Cylinder(20, 120).moveY(-7) * Cube(40, 10, 120).moveX(-20) - screw.moveZ(25) - screw.moveZ(105)
+    val unitY = Vector(0,1,0,Millimeters)
+    val back = Chamfer(base, screwRadius, (face, edge) => face.normal().dot(unitY).to(SquareCentimeters) > 0 && edge.isClosed)
+    //
+    val plate = Offset( 5, Cube(80, 61, 1).moveX(-40))
+    val overall = back.moveY(-5) + plate + plate.moveZ(119) - c1.move(22, 35, 0) - c2.move(-18, 33, 0)
+    //
+    render(overall, false)
+  }
+
+  test("a more complex example 2") {
+    implicit val tolerance = Millimeters(1e-3)
+    //
+    val x = 350
+    val y = 250
+    val z1 = 3
+    val z2 = 5
+    val gap = 3
+    val border = 5
+    val radius = 2
+    val splineWidth = 2 * radius + 1
+    val splineGap = splineWidth + 6
+    val angle = math.Pi / 4
+    //
+    val tb = Cube(x, border, z2)
+    val lr = Cube(border, y, z2)
+    val frame1 = tb + tb.moveY(y - border) + lr + lr.moveX(x - border) + Cube(x, y, z1)
+    //val frame = Fillet(frame1, radius/2, edge => edge.point(0.5).z >= z2) //FIXME makes the JVM segfault!!!
+    def isCorner(edge: TopoDS_Edge) = {
+      val p = edge.point(0.5)
+      (p.x <= 0 || p.x >= x) && (p.y <= 0 || p.y >= y)
+    }
+    /*
+    def isCorner2(edge: TopoDS_Edge) = {
+      val p = edge.point(0.5)
+      (p.x <= border/2 || p.x >= x-border/2) && (p.y <= border/2 || p.y >= y-border/2) && p.z >= z2
+    }
+    */
+    val frame = Fillet(frame1, 2*radius, isCorner)
+    //val frame = Fillet(frame2, radius, isCorner2)
+    //
+    val splineArea = Cube(x - 2*border - 2*gap, y - 2*border - 2*gap, z2).move(border + gap, border + gap, 0)
+    val spline = Cube(x / math.cos(angle), splineWidth, z2).rotateZ(-angle)
+    var splines: List[Solid] = Nil
+    var i = border + gap + splineWidth - 3 //XXX fiddle around to avoid the error during the fillet, we are still loosing two of them ...
+    val yMax = y + x / math.tan(angle) - splineWidth
+    while (i <= yMax) {
+      val s = spline.moveY(i) * splineArea
+      val f = Fillet(s, radius, edge => edge.point(0.5).z >= z2)
+      splines ::= f
+      i += splineGap
+    }
+    //
+    val overall = frame ++ splines
+    //render(overall, true)
+    // negative
+    val box = Cube(x + 20, y + 20, z2 + 1).move(-10, -10, 0)
+    val diff = box - overall
+    render(diff, false)
+  }
+
 }

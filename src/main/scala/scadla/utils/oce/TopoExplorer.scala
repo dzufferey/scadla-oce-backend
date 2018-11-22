@@ -4,24 +4,33 @@ import org.jcae.opencascade.jni._
 
 object TopoExplorer {
 
-  def iterator(shape: TopoDS_Shape) = new Iterator[TopoDS_Shape] {
-    protected val it = new TopoDS_Iterator(shape)
-    def next = {
-      val v = it.value
-      it.next
-      v
+  def iterator(shape: TopoDS_Shape) = {
+    if (shape == null) {
+      new Iterator[TopoDS_Shape] {
+        def next = null
+        def hasNext = false
+      }
+    } else {
+      new Iterator[TopoDS_Shape] {
+        protected val it = new TopoDS_Iterator(shape)
+        def next = {
+          val v = it.value
+          it.next
+          v
+        }
+        def hasNext = it.more()
+      }
     }
-    def hasNext = it.more()
   }
 
   private class TopoIterator[T <: TopoDS_Shape](shape: TopoDS_Shape, kind: TopAbs_ShapeEnum) extends Iterator[T] {
-    protected val it = new TopExp_Explorer(shape, kind)
+    protected val it = if (shape != null) new TopExp_Explorer(shape, kind) else null
     def next = {
       val v = it.current.asInstanceOf[T]
       it.next
       v
     }
-    def hasNext = it.more
+    def hasNext = it != null && it.more
   }
 
   def vertices(shape: TopoDS_Shape): Iterator[TopoDS_Vertex] = new TopoIterator[TopoDS_Vertex](shape, TopAbs_ShapeEnum.VERTEX)

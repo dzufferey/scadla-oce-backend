@@ -10,6 +10,7 @@ import squants.space.Length
 import scala.language.postfixOps
 import squants.space.LengthConversions._
 import scadla.EverythingIsIn.{millimeters, radians}
+import ExtendedOps._
   
 class ChamferTest extends FunSuite {
 
@@ -17,9 +18,9 @@ class ChamferTest extends FunSuite {
     val tree = Cube(1,1,1)
     val r = new OceRenderer
     val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     val shapeWithChamfer = Chamfer(shape, (face,edge) => Some(0.2 mm))
-    assert(new BRepCheck_Analyzer(shapeWithChamfer).isValid)
+    assert(shapeWithChamfer.isValid)
     //val obj = r.toMesh(shapeWithChamfer)
     //Viewer.default(obj)
   }
@@ -28,23 +29,22 @@ class ChamferTest extends FunSuite {
     val tree = Rotate(1, 1, 1, Cube(1,1,1))
     val r = new OceRenderer
     val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
-    assert(new BRepCheck_Analyzer(shape).isValid)
+    assert(shape.isValid)
     val shapeWithChamfer = Chamfer(shape, (face,edge) => Some(0.2 mm))
-    assert(new BRepCheck_Analyzer(shapeWithChamfer).isValid)
+    assert(shapeWithChamfer.isValid)
     //val obj = r.toMesh(shapeWithChamfer)
     //Viewer.default(obj)
   }
 
-  //XXX for some reason this does not work!
-//test("test 03") {
-//  val tree = CenteredCube(1,1,3)
-//  val r = new OceRenderer
-//  val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
-//  assert(new BRepCheck_Analyzer(shape).isValid)
-//  val shapeWithChamfer = Chamfer(shape, (face,edge) => Some(0.2 mm))
-//  assert(new BRepCheck_Analyzer(shapeWithChamfer).isValid)
-//  val obj = r.toMesh(shapeWithChamfer)
-//  Viewer.default(obj)
-//}
+  test("test 03") {
+    val tree = CenteredCube(1,1,3)
+    val r = new OceRenderer
+    val shape = r.render(tree).asInstanceOf[TopoDS_Solid]
+    assert(shape.isValid)
+    val shapeWithChamfer = Chamfer(shape, (face,edge) => Some(0.2 mm))
+    assert(shapeWithChamfer.isValid)
+    //val obj = r.toMesh(shapeWithChamfer)
+    //Viewer.default(obj)
+  }
 
 }

@@ -1,23 +1,37 @@
 package scadla.utils.oce
 
-import squants.space.{Length, Angle}
-import squants.space.Millimeters
+import squants.space.{Length, Millimeters, LengthUnit}
 import org.jcae.opencascade.jni._
 
-class Fillet(solid: TopoDS_Shape) {
+class Fillet(solid: TopoDS_Shape, unit: LengthUnit = Millimeters) {
 
-  protected val mf = new BRepFilletAPI_MakeFillet(solid)
+  protected val mf = if (solid != null) new BRepFilletAPI_MakeFillet(solid) else null
+  protected var trivial = true
 
-  def add(radius: Length, edge: TopoDS_Edge) = mf.add(radius.toMillimeters, edge)
+  def add(radius: Length, edge: TopoDS_Edge) = {
+    trivial = false
+    mf.add(radius.to(unit), edge)
+  }
 
-  def result = mf.shape
+  def result = {
+    if (trivial) {
+      solid
+    } else {
+      val res = mf.shape
+      if (res == null) {
+        sys.error("Fillet failed")
+      } else {
+        res
+      }
+    }
+  }
 
 }
 
 object Fillet {
 
-  def apply(solid: TopoDS_Shape, filter: TopoDS_Edge => Option[Length]) = {
-    val mf = new Fillet(solid)
+  def apply(solid: TopoDS_Shape, filter: TopoDS_Edge => Option[Length], unit: LengthUnit = Millimeters) = {
+    val mf = new Fillet(solid, unit)
     for (e <- TopoExplorerUnique.edges(solid);
          l <- filter(e)) {
       mf.add(l, e)
@@ -25,8 +39,8 @@ object Fillet {
     mf.result
   }
   
-  def wire(solid: TopoDS_Shape, filter: TopoDS_Wire => Option[Length]) = {
-    val mf = new Fillet(solid)
+  def wire(solid: TopoDS_Shape, filter: TopoDS_Wire => Option[Length], unit: LengthUnit = Millimeters) = {
+    val mf = new Fillet(solid, unit)
     for (w <- TopoExplorerUnique.wires(solid);
          l <- filter(w);
          e <- TopoExplorerUnique.edges(w)) {
@@ -35,8 +49,8 @@ object Fillet {
     mf.result
   }
   
-  def face(solid: TopoDS_Shape, filter: TopoDS_Face => Option[Length]) = {
-    val mf = new Fillet(solid)
+  def face(solid: TopoDS_Shape, filter: TopoDS_Face => Option[Length], unit: LengthUnit = Millimeters) = {
+    val mf = new Fillet(solid, unit)
     for (f <- TopoExplorerUnique.faces(solid);
          l <- filter(f);
          e <- TopoExplorerUnique.edges(f)) {

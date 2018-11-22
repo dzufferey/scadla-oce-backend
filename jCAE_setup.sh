@@ -4,12 +4,19 @@ mkdir -p lib ext
 
 cd ext
 echo Cloning jCAE
-git clone https://github.com/jeromerobert/jCAE.git
+if test -d jCAE ; then
+    cd jCAE
+    git pull
+    cd ..
+else
+    #git clone https://github.com/jeromerobert/jCAE.git
+    git clone https://github.com/dzufferey/jCAE.git
+fi
 
 cd jCAE/occjava
 
 echo Building Swig bindings
-mkdir build
+mkdir -p build
 cd build
 cmake ..
 make
