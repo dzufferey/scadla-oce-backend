@@ -143,10 +143,15 @@ object LinearExtrude {
     val u = x.unit
     apply(Vector(x to u, y to u, z to u, u), s)
   }
-
+  
   def apply(direction: Vector, s: Solid): OceOperation = {
+    val zero = direction.unit(0)
+    apply(Point(zero, zero, zero), direction, s)
+  }
+
+  def apply(origin: Point, direction: Vector, s: Solid): OceOperation = {
     OceOperation(s, (shape, unit) => {
-      new utils.oce.Prism(shape, direction, unit).result
+      new utils.oce.Prism(shape, origin, direction, unit).result
     })
   }
 

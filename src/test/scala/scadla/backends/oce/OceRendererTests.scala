@@ -177,6 +177,10 @@ class OceRendererTest extends FunSuite {
     }
     //
     val overall = frame ++ splines
+    //val r = new OceRenderer
+    //val shape = r.render(overall)
+    //val vol = shape.solids.map(_.volume()).reduce(_ + _)
+    //Console.println("volume: " + vol)
     //render(overall, true)
     // negative
     val box = Cube(x + 20, y + 20, z2 + 1).move(-10, -10, 0)

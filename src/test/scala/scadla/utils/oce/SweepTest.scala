@@ -11,12 +11,12 @@ import ExtendedOps._
 
 class PrismTest extends FunSuite {
   
-  test("test 01") {
+   test("test 01") {
     val tree = Cube(1,1,1)
     val r = new OceRenderer
     val shape = r.render(tree)
     assert(shape.isValid)
-    val shape2 = new Prism(shape, Vector(0, 0, 5, Millimeters)).result
+    val shape2 = new Prism(shape, Point(0,0,0), Vector(0, 0, 5, Millimeters)).result
     assert(shape2.isValid)
     //r.toIGES(shape2, "test.igs")
     //val obj = r.toMesh(shape2)
@@ -28,7 +28,19 @@ class PrismTest extends FunSuite {
     val r = new OceRenderer
     val shape = r.render(tree)
     assert(shape.isValid)
-    val shape2 = new Prism(shape, Vector(2, 0, 5, Millimeters)).result
+    val shape2 = new Prism(shape, Point(0,0,0.2), Vector(2, 0, 5, Millimeters)).result
+    assert(shape2.isValid)
+    //r.toIGES(shape2, "test.igs")
+    //val obj = r.toMesh(shape2)
+    //Viewer.default(obj)
+  }
+
+  test("test 03") {
+    val tree = Difference(Cylinder(1,1), Cylinder(0.8,1))
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(shape.isValid)
+    val shape2 = new Prism(shape, Point(0,0,0.2), Vector(2, 0, 5, Millimeters)).result
     assert(shape2.isValid)
     //r.toIGES(shape2, "test.igs")
     //val obj = r.toMesh(shape2)
@@ -36,16 +48,16 @@ class PrismTest extends FunSuite {
   }
 
   //TODO not the expected result ...
-  test("test 03") {
+  ignore("test 03a") {
     val tree = Difference(Cylinder(1,1), Cylinder(0.8,1))
     val r = new OceRenderer
     val shape = r.render(tree)
     assert(shape.isValid)
-    val shape2 = new Prism(shape, Vector(2, 0, 5, Millimeters)).result
+    val shape2 = new Prism(shape, Point(0,0,0.5), Vector(2, 0, 5, Millimeters)).result
     assert(shape2.isValid)
     //r.toIGES(shape2, "test.igs")
-    //val obj = r.toMesh(shape2)
-    //Viewer.default(obj)
+    val obj = r.toMesh(shape2)
+    Viewer.default(obj)
   }
 
   test("test 04") {
@@ -53,7 +65,7 @@ class PrismTest extends FunSuite {
     val r = new OceRenderer
     val shape = r.render(tree)
     assert(shape.isValid)
-    val shape2 = new Prism(shape, Vector(0, 0, 5, Millimeters)).result
+    val shape2 = new Prism(shape, Point(0,0,0), Vector(0, 0, 5, Millimeters)).result
     assert(shape2.isValid)
     //r.toIGES(shape2, "test.igs")
     //val obj = r.toMesh(shape2)
@@ -64,17 +76,41 @@ class PrismTest extends FunSuite {
 
 class RevolutionTest extends FunSuite {
 
-  //TODO not the expected result ...
   test("test 01") {
     val tree = Cube(1,1,1)
     val r = new OceRenderer
     val shape = r.render(tree)
     assert(shape.isValid)
-    val shape2 = new Revolution(shape, Vector(0, 0, 5, Millimeters), 1.0).result
+    val shape2 = new Revolution(shape, Point(1,0,0), Vector(0, 0, 5, Millimeters), 1.0).result
     assert(shape2.isValid)
     //r.toIGES(shape2, "test.igs")
     //val obj = r.toMesh(shape2)
     //Viewer.default(obj)
+  }
+
+  test("test 02") {
+    val tree = Cube(1,1,1)
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(shape.isValid)
+    val shape2 = new Revolution(shape, Point(1,0,0), Vector(-5, 5, 5, Millimeters), 5.0).result
+    assert(shape2.isValid)
+    //r.toIGES(shape2, "test.igs")
+    //val obj = r.toMesh(shape2)
+    //Viewer.default(obj)
+  }
+
+  //TODO final mesh is wrong
+  ignore("test 02a") {
+    val tree = Cube(1,1,1)
+    val r = new OceRenderer
+    val shape = r.render(tree)
+    assert(shape.isValid)
+    val shape2 = new Revolution(shape, Point(1,0,0), Vector(5, 5, 5, Millimeters), 1.0).result
+    assert(shape2.isValid)
+    //r.toIGES(shape2, "test.igs")
+    val obj = r.toMesh(shape2)
+    Viewer.default(obj)
   }
 
 }

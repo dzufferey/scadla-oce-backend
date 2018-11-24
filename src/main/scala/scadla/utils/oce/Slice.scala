@@ -4,6 +4,8 @@ import scadla._
 import squants.space.{LengthUnit, Length, Millimeters}
 import org.jcae.opencascade.jni._
 import ExtendedOps._
+import dzufferey.utils._
+import dzufferey.utils.LogLevel._
 
 object Slice {
 
@@ -21,6 +23,7 @@ object Slice {
   }
 
   def postprocess(planeCoeff: Array[Double], shape: TopoDS_Shape): Seq[TopoDS_Face] = {
+    //org.jcae.opencascade.Utilities.dumpTopology(shape, Console.out)
     def mkFacesFromWires(wires: Seq[TopoDS_Wire]): Seq[TopoDS_Face] = {
       wires.map( w => new BRepBuilderAPI_MakeFace(planeCoeff, w).shape().asInstanceOf[TopoDS_Face] )
     }
@@ -42,7 +45,7 @@ object Slice {
               toProcess = toProcess.filter( _ != e )
               end = if (e.start == end) e.end else e.start
             case None =>
-              sys.error("cannot clost the loop")
+              Logger.logAndThrow("scadla.utils.oce.Slice", Error, "cannot close the loop")
           }
         }
         acc ::= wire.shape().asInstanceOf[TopoDS_Wire]

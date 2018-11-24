@@ -8,30 +8,12 @@ import dzufferey.utils._
 import dzufferey.utils.LogLevel._
 import ExtendedOps._
 
-abstract class Sweep(shape: TopoDS_Shape, unit: LengthUnit) {
+abstract class Sweep(shape: TopoDS_Shape, point: Point, normal: Vector, unit: LengthUnit) {
 
   protected val volumeUnit = (unit(1) * unit(1) * unit(1)).unit
 
   protected def process(s: TopoDS_Shape): TopoDS_Shape
 
-  protected def findShellOrFace(shape: TopoDS_Shape) = {
-    if (shape.isInstanceOf[TopoDS_Face] || shape.isInstanceOf[TopoDS_Shell]) {
-      Seq(shape).iterator
-    } else {
-      Logger("scadla.utils.oce.Sweep", Info, "The shape is not a face or shell, try to extract a face or shell")
-      //explore the shape to extract faces/shells
-      val shells = shape.shells
-      if (shells.hasNext) {
-        shells
-      } else {
-        val faces = shape.faces
-        if (!faces.hasNext) {
-          Logger("scadla.utils.oce.Sweep", Notice, "Could not find neither a shell nor a face")
-        }
-        faces
-      }
-    }
-  }
 
   protected def fuse(_a: TopoDS_Shape, _b: TopoDS_Shape): TopoDS_Shape = {
     ///Logger("scadla.utils.oce.Sweep", Notice, "======")
@@ -88,13 +70,14 @@ abstract class Sweep(shape: TopoDS_Shape, unit: LengthUnit) {
   }
 
   def result = {
-    val shapes = findShellOrFace(shape).map(process)
+    val faces = Slice(shape, point, normal, unit).iterator
+    val shapes = faces.map(process)
     val res = reduce(shapes)
     res
   }
 }
 
-class Prism(shape: TopoDS_Shape, direction: Vector, unit: LengthUnit = Millimeters) extends Sweep(shape, unit) {
+class Prism(shape: TopoDS_Shape, start: Point, direction: Vector, unit: LengthUnit = Millimeters) extends Sweep(shape, start, direction, unit) {
     
   assert((direction.norm to unit) > 0.0, "direction ill-defined")
   protected val dir = Array[Double](direction.x to unit, direction.y to unit, direction.z to unit)
@@ -116,9 +99,9 @@ class Prism(shape: TopoDS_Shape, direction: Vector, unit: LengthUnit = Millimete
 
 }
 
-class Revolution(shape: TopoDS_Shape, axis: Vector, angle: Angle,
+class Revolution(shape: TopoDS_Shape, start: Point, axis: Vector, angle: Angle,
                  origin: Point = new Point(Millimeters(0), Millimeters(0), Millimeters(0)),
-                 unit: LengthUnit = Millimeters) extends Sweep(shape, unit) {
+                 unit: LengthUnit = Millimeters) extends Sweep(shape, start, (start - origin).cross(axis).toUnitVector, unit) {
 
   protected val a = {
     assert((axis.norm to unit) > 0.0, "axis ill-defined")
@@ -143,7 +126,7 @@ class Revolution(shape: TopoDS_Shape, axis: Vector, angle: Angle,
 }
 
 //points in the spine may have a tangent vectors
-class Pipe(shape: TopoDS_Shape, spine: Seq[(Point,Option[Vector])], unit: LengthUnit = Millimeters, tolerance: Double = 1e-7) extends Sweep(shape, unit) {
+class Pipe(shape: TopoDS_Shape, spine: Seq[(Point,Option[Vector])], unit: LengthUnit = Millimeters, tolerance: Double = 1e-7) extends Sweep(shape, spine(0)._1, Pipe.getFirstTangent(spine), unit) {
 
   val wire = {
     val points = Array.ofDim[Double](3 * spine.size)
@@ -185,6 +168,10 @@ class Pipe(shape: TopoDS_Shape, spine: Seq[(Point,Option[Vector])], unit: Length
 }
 
 object Pipe {
+
+  def getFirstTangent(spine: Seq[(Point,Option[Vector])]): Vector = {
+    spine(0)._2.getOrElse( (spine(0)._1 - spine(1)._1).toUnitVector )
+  }
     
   //spine has no tangent
   def apply(shape: TopoDS_Shape, spine: Seq[Point], unit: LengthUnit = Millimeters, tolerance: Double = 1e-7) = {
