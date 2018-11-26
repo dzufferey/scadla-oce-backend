@@ -9,7 +9,18 @@ import org.jcae.opencascade.jni._
 import dzufferey.utils._
 import dzufferey.utils.LogLevel._
 
-class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Shape] {
+//OCE operation are not always well defined contrary to CSG.
+//Therefore, bad things can happen. In case of error, the options are:
+//- replace the operation that failed by empty
+//- keep the argument before the operation
+//- throw an exception
+object ErrorPolicy extends Enumeration {
+  type ErrorPolicy = Value
+  val replaceByEmpty, keepOld, rethrow = Value
+}
+import ErrorPolicy._
+
+class OceRenderer(unit: LengthUnit = Millimeters, onError: ErrorPolicy = keepOld) extends RendererAux[TopoDS_Shape] {
 
   var deviation = 2e-2
 
@@ -22,7 +33,7 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     case t @ Scale(x, y, z, _) => x == y && y == z && super.isSupported(t)
     case t: Transform => super.isSupported(t)
     case OceOffset(_, s) => isSupported(s)
-    case OceOperation(s, _) => isSupported(s)
+    case OceOperation(s, _, _) => isSupported(s)
     case o: Operation => super.isSupported(o)
     case _ => false
   }
@@ -144,7 +155,8 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
     case _: Union => union(args)
     case _: Intersection => intersection(args)
     case _: Difference => difference(args.head, args.tail)
-    case OceOperation(_, op) =>
+    case OceOperation(_, op, err) =>
+      val errorPolicy = err.getOrElse(onError)
       val shape = args.head
       if (shape == null) {
         empty
@@ -154,13 +166,29 @@ class OceRenderer(unit: LengthUnit = Millimeters) extends RendererAux[TopoDS_Sha
           if (result.isValid) {
             result
           } else {
-            Logger("OceRenderer", Error, "Error in rendering " + o.getClass + "\n  " + o.trace.mkString("\n  "))
-            shape
+            errorPolicy match {
+              case ErrorPolicy.replaceByEmpty =>
+                Logger("OceRenderer", Warning, "Error in rendering " + o.getClass + "\n  " + o.trace.mkString("\n  "))
+                null
+              case ErrorPolicy.keepOld =>
+                Logger("OceRenderer", Warning, "Error in rendering " + o.getClass + "\n  " + o.trace.mkString("\n  "))
+                shape
+              case ErrorPolicy.rethrow =>
+                Logger.logAndThrow("OceRenderer", Error, "Error in rendering " + o.getClass + "\n  " + o.trace.mkString("\n  "))
+            }
           }
         } catch {
           case e: java.lang.Exception =>
-            Logger("OceRenderer", Error, "Error in rendering " + o.getClass + " (" + e.getMessage + "):\n  " + o.trace.mkString("\n  "))
-            shape
+            errorPolicy match {
+              case ErrorPolicy.replaceByEmpty =>
+                Logger("OceRenderer", Warning, "Error in rendering " + o.getClass + " (" + e.getMessage + "):\n  " + o.trace.mkString("\n  "))
+                null
+              case ErrorPolicy.keepOld =>
+                Logger("OceRenderer", Warning, "Error in rendering " + o.getClass + " (" + e.getMessage + "):\n  " + o.trace.mkString("\n  "))
+                shape
+              case ErrorPolicy.rethrow =>
+                Logger.logAndThrow("OceRenderer", Error, "Error in rendering " + o.getClass + " (" + e.getMessage + "):\n  " + o.trace.mkString("\n  "))
+            }
         }
       }
     case offset @ OceOffset(_, _) =>

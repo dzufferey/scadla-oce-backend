@@ -2,6 +2,7 @@ package scadla
 
 import squants.space.{Length, LengthUnit}
 import org.jcae.opencascade.jni._
+import scadla.backends.oce.ErrorPolicy._
 
 case class OceShape(shape: TopoDS_Shape) extends Shape {
   assert(shape.shapeType == TopAbs_ShapeEnum.SOLID ||
@@ -9,11 +10,15 @@ case class OceShape(shape: TopoDS_Shape) extends Shape {
          shape.shapeType == TopAbs_ShapeEnum.COMPOUND)
 }
 
-case class OceOperation(s: Solid, op: (TopoDS_Shape, LengthUnit) => TopoDS_Shape) extends Operation(Seq(s)) {
+case class OceOperation(s: Solid, op: (TopoDS_Shape, LengthUnit) => TopoDS_Shape,
+                        onError: Option[ErrorPolicy] = None
+                       ) extends Operation(Seq(s)) {
   def setChildren(c: Seq[Solid]) = {
     assert(c.length == 1)
     OceOperation(c.head, op)
   }
+
+  def setErrorPolicy(errorPolicy: ErrorPolicy) = OceOperation(s, op, Some(errorPolicy))
 }
 
 object Fillet {
