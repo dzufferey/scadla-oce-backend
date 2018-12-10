@@ -3,11 +3,11 @@ package scadla.backends.oce
 import scadla._
 import scadla.InlineOps._
 import scadla.backends.Viewer
-import scadla.utils.CenteredCube
+import scadla.utils.{CenteredCube, Trapezoid}
 import scadla.utils.oce.ExtendedOps._
 import scadla.utils.oce.{Fillet => _, Chamfer => _, Offset => _, _}
 import org.scalatest._
-import squants.space.{Length, Millimeters, SquareCentimeters}
+import squants.space.{Angle, Length, Millimeters, SquareCentimeters}
 import scadla.EverythingIsIn.{millimeters, radians}
 import org.jcae.opencascade.jni._
 
@@ -186,6 +186,19 @@ class OceRendererTest extends FunSuite {
     val box = Cube(x + 20, y + 20, z2 + 1).move(-10, -10, 0)
     val diff = box - overall
     render(diff, false)
+  }
+
+  //does not result in the cleanest BRep but it works
+  test("something with polyhedron") {
+    val tx: (Length, Length, Angle) = (46, 50, 0.0)
+    val ty: (Length, Length, Angle) = (46, 50, 0.0)
+    // Trapezoid is a polyhedron
+    val trap = (Trapezoid(tx, ty, 71) * Cube(50, 50, 20)).move(-25, -25, 0)
+    val tree = Intersection(
+      Cylinder(25, 23, 71) + trap,
+      Cube(50, 25, 100).moveX(-25)
+    )
+    render(tree, false)
   }
 
 }
