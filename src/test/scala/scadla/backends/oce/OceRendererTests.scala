@@ -133,7 +133,7 @@ class OceRendererTest extends FunSuite {
     render(overall, false)
   }
 
-  test("a more complex example 2") {
+  ignore("a more complex example 2") {
     implicit val tolerance = Millimeters(1e-3)
     //
     val x = 350
@@ -190,43 +190,49 @@ class OceRendererTest extends FunSuite {
 
   //does not result in the cleanest BRep but it works
   test("something with polyhedron") {
-    val tx: (Length, Length, Angle) = (46, 50, 0.0)
-    val ty: (Length, Length, Angle) = (46, 50, 0.0)
+    val topDia: Length = 45.4
+    val botDia: Length = 50
+    val tr: (Length, Length, Angle) = (topDia, 50, 0.0)
     // Trapezoid is a polyhedron
-    val trap = (Trapezoid(tx, ty, 71) * Cube(50, 50, 20)).move(-25, -25, 0)
+    val fullTrap = Trapezoid(tr, tr, 71).move(-botDia/2, -botDia/2, 0)
+    val trap = fullTrap * CenteredCube.xy(50, 50, 20)
     val tree = Intersection(
-      Cylinder(25, 23, 71) + trap,
-      Cube(50, 25, 100).moveX(-25)
+      Cylinder(botDia/2, topDia/2, 71) + trap + Cylinder(botDia/2 + 4, topDia/2, 8).moveZ(16) * fullTrap,
+      Cube(botDia, botDia/2, 100).moveX(-botDia/2)
     )
     render(tree, false)
     //let us push that a bit further
-    val screw = Cylinder(2, 20) + Cylinder(4, 20).moveZ(20) // for mounting to the base M4
-    val slotHeight = 5
+    val shaftsDistance: Length = 60 //actually closer to 62
+    val screw = Cylinder(2, 20) + Cylinder(4, 40).moveZ(20) // for mounting to the base M4
+    val slotHeight: Length = 5
     val slot = (Cylinder(1.5,3) + Cylinder(1.5, 3).moveY(slotHeight) + CenteredCube.x(3, slotHeight, 3)).rotateX(Degrees(90)) //for mounting the motor (NEMA 17)
     val sideTriangle = Cube(2.4, 80, 80).rotateX(Degrees(-45)) * Cube(3, 50, 43 + slotHeight)
-    val width = 43 + 2 * 2.4
+    val width: Length = 43 + 2 * 2.4
+    val zGap: Length = 15
+    val toMotorShaft: Length = 43.0 / 2 + 2
+    val baseHeight: Length = shaftsDistance - toMotorShaft - zGap
     val base = Union(
-      Cube(width, 50, 15), //lower part
-      Cube(width, 3, 43 + slotHeight).move(0, 47, 15), //backstop
-      sideTriangle.moveZ(15),
-      sideTriangle.move(width-2.4, 0, 15)
+      Cube(width, 50, baseHeight).moveZ(-baseHeight), //lower part
+      Cube(width, 3, 43 + slotHeight).moveY(47), //backstop
+      sideTriangle,
+      sideTriangle.moveX(width-2.4)
     )
     val tree2 = Difference(
       base.moveX(-width/2),
-      tree.rotateX(Degrees(90)).rotateZ(Degrees(180)).moveZ(-13), //shape of part below
-      screw.move(- 18, 12, -5), // back mounting screw
-      screw.move(+ 18, 12, -5), // back mounting screw
-      screw.moveZ(8).rotateY(Degrees( 45)).move(0, 40, -15), // front mounting screw
-      screw.moveZ(8).rotateY(Degrees(-45)).move(0, 40, -15), // front mounting screw
-      Cylinder(11.5, 5).rotateX(Degrees(90)).move(0, 50, 15+42/2), //motor flange 1
-      Cube(23, 5, 50).move(-11.5, 47, 15+42/2), //motor flange 2
-      slot.move(-31/2, 50, 15 + 5.5), //motor mounting screw
-      slot.move( 31/2, 50, 15 + 5.5), //motor mounting screw
-      slot.move(-31/2, 50, 15 + 42 - 5.5), //motor mounting screw
-      slot.move( 31/2, 50, 15 + 42 - 5.5), //motor mounting screw
+      tree.rotateX(Degrees(90)).rotateZ(Degrees(180)).moveZ(-baseHeight-zGap), //shape of part below
+      screw.move(- 18, 12, - baseHeight + botDia/2 - zGap -20 + 5), // back mounting screw TODO countersink?
+      screw.move(+ 18, 12, - baseHeight + botDia/2 - zGap -20 + 5), // back mounting screw TODO countersink?
+      screw.moveZ(8).rotateY(Degrees( 45)).move(0, 40, -baseHeight-zGap), // front mounting screw
+      screw.moveZ(8).rotateY(Degrees(-45)).move(0, 40, -baseHeight-zGap), // front mounting screw
+      Cylinder(11.5, 5).rotateX(Degrees(90)).move(0, 50, 42/2), //motor flange 1
+      Cube(23, 5, 50).move(-11.5, 47, 42/2), //motor flange 2
+      slot.move(-31.0/2, 50, 5.5), //motor mounting screw
+      slot.move( 31.0/2, 50, 5.5), //motor mounting screw
+      slot.move(-31.0/2, 50, 42 - 5.5), //motor mounting screw
+      slot.move( 31.0/2, 50, 42 - 5.5), //motor mounting screw
       Empty
     )
-    render(tree2, false)
+    render(tree2, true)
   }
 
 }
