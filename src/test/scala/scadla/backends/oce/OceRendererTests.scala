@@ -133,7 +133,7 @@ class OceRendererTest extends FunSuite {
     render(overall, false)
   }
 
-  ignore("a more complex example 2") {
+  test("a more complex example 2") {
     implicit val tolerance = Millimeters(1e-3)
     //
     val x = 350
@@ -202,7 +202,7 @@ class OceRendererTest extends FunSuite {
     )
     render(tree, false)
     //let us push that a bit further
-    val shaftsDistance: Length = 60 //actually closer to 62
+    val shaftsDistance: Length = 52 //actually closer to 62
     val screw = Cylinder(2, 20) + Cylinder(4, 40).moveZ(20) // for mounting to the base M4
     val slotHeight: Length = 5
     val slot = (Cylinder(1.5,3) + Cylinder(1.5, 3).moveY(slotHeight) + CenteredCube.x(3, slotHeight, 3)).rotateX(Degrees(90)) //for mounting the motor (NEMA 17)
@@ -217,11 +217,12 @@ class OceRendererTest extends FunSuite {
       sideTriangle,
       sideTriangle.moveX(width-2.4)
     )
+    val backScrewOffset = 2
     val tree2 = Difference(
       base.moveX(-width/2),
       tree.rotateX(Degrees(90)).rotateZ(Degrees(180)).moveZ(-baseHeight-zGap), //shape of part below
-      screw.move(- 18, 12, - baseHeight + botDia/2 - zGap -20 + 5), // back mounting screw TODO countersink?
-      screw.move(+ 18, 12, - baseHeight + botDia/2 - zGap -20 + 5), // back mounting screw TODO countersink?
+      screw.move(- 18, 12, - baseHeight + botDia/2 - zGap -20 + backScrewOffset), // back mounting screw TODO countersink?
+      screw.move(+ 18, 12, - baseHeight + botDia/2 - zGap -20 + backScrewOffset), // back mounting screw TODO countersink?
       screw.moveZ(8).rotateY(Degrees( 45)).move(0, 40, -baseHeight-zGap), // front mounting screw
       screw.moveZ(8).rotateY(Degrees(-45)).move(0, 40, -baseHeight-zGap), // front mounting screw
       Cylinder(11.5, 5).rotateX(Degrees(90)).move(0, 50, 42/2), //motor flange 1
@@ -232,7 +233,7 @@ class OceRendererTest extends FunSuite {
       slot.move( 31.0/2, 50, 42 - 5.5), //motor mounting screw
       Empty
     )
-    render(tree2, true)
+    render(tree2, false)
   }
 
 }
