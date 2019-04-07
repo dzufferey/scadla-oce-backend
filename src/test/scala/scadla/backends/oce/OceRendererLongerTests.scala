@@ -134,5 +134,60 @@ class OceRendererLongerTest extends FunSuite {
     )
     render(tree2, false)
   }
+  
+  test("a more complex example 3") {
+    import scadla.utils.extrusion._
+    val alpha: Angle = Degrees(15)
+    val beta: Angle = Degrees(10)
+    val thickness: Length = 1
+    val side: Length = 25
+    val side2: Length = side + 5
+    val cornerRadius: Length = 3
+    val extra = 10
+    //
+    val l1 = Fillet(L(side+extra, side+extra, thickness+extra)(100), cornerRadius, edge => {
+        val (start, end) = edge.extremities
+        start.x == thickness+extra && start.y == thickness+extra && end.x == thickness+extra && end.y == thickness+extra
+      })
+    val l2 = L(side*2+extra, side*2+extra, thickness+extra)(100).move(-thickness, -thickness, -20)
+    val screw = Cylinder(1.7, 12)
+    val ls = Union(
+        l1,
+        l2,
+        screw.rotateX(Degrees(-90)).move(extra+side-10,extra,10),
+        screw.rotateY(Degrees(90)).move(extra,extra+side-10,10)
+      )
+    val base = Difference(
+        Cube(side2, side2, side),
+        ls.move(-extra, -extra, side*alpha.sin + 3).rotate(-alpha, beta, 0.0),
+        screw.move(side2/2, side2/2, 0) //bottom screw
+      )
+    val finished = Fillet(base, cornerRadius, edge => {
+      val zero: Length = 0
+      val s = edge.start
+      val e = edge.end
+      (s.x == zero && s.y == zero && edge.end.z > zero) || (s.x == s.y && e.x == e.y)
+    })
+    val all = finished + finished.mirror(1, 0, 0).moveX(-5)
+    render(all, false)
+    //part 2
+    val screwRadius = 1.4
+    val size = 21.3
+    val delta = screwRadius + 0.1
+    val roundedCube = Fillet(Cube(size,size,size+1), 2.5, edge => edge.tangent().toUnitVector.dot(Vector.z) == 1*Millimeters(1))
+    val s = Cylinder(screwRadius, size+2).moveZ(-size/2-1)
+    val ls2 = Union(
+        l1,
+        s.rotateX(math.Pi/2).move(extra + size/2 + thickness, extra + size/2 + thickness, 4+delta),
+        s.rotateX(math.Pi/2).move(extra + size/2 + thickness, extra + size/2 + thickness, 13+delta),
+        s.rotateY(math.Pi/2).move(extra + size/2 + thickness, extra + size/2 + thickness, 4-delta),
+        s.rotateY(math.Pi/2).move(extra + size/2 + thickness, extra + size/2 + thickness, 13-delta)
+      )
+    val otherSide = Difference(
+        roundedCube,
+        ls2.move(-extra+2.5, -extra+4.5, 1).rotate(alpha, -beta, 0.0)
+      )
+    render(otherSide + otherSide.mirror(1, 0, 0).moveX(-5), false)
+  }
 
 }
