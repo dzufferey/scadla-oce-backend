@@ -190,4 +190,79 @@ class OceRendererLongerTest extends FunSuite {
     render(otherSide + otherSide.mirror(1, 0, 0).moveX(-5), false)
   }
 
+  test("hangboard"){
+    val x = Millimeters(290)
+    val y = Millimeters(160)
+    val z = Millimeters(60)
+    val z2 = Millimeters(35)
+    val yTop = Millimeters(115)
+    val yMiddle = Millimeters(74)
+    val yBottom = Millimeters(25)
+    def pocket(width: Length, radius: Length, depth: Length) = {
+      Union(
+        Cylinder(radius, depth),
+        Cube(width, 2*radius, depth).moveY(-radius),
+        Cylinder(radius, depth).moveX(width)
+      )
+    }
+    def pocket2(width: Length, radius: Length, depth: Length) = {
+      Union(
+        Cylinder(radius, depth).moveZ(radius),
+        Cube(width, 2*radius, depth - radius).move(0, -radius, radius),
+        Cylinder(radius, depth).moveX(width).moveZ(radius),
+        Cylinder(radius, width).rotateY(Degrees(90)).moveZ(radius),
+        Sphere(radius).moveZ(radius),
+        Sphere(radius).move(width, 0, radius)
+      )
+    }
+    val slopes = Union(
+      Cube(90,y,3*z).rotateX(Degrees(20)).moveY(y),
+      Cube(100,y,3*z).rotateX(Degrees(32.5)).move(90,y,0),
+      Cube(100,y,3*z).rotateX(Degrees(45)).move(190,y,0),
+    )
+    val base = Difference(
+        Cube(x, y, z),
+        Cube(x,y,z).move(0, 50 - y, z2),
+        // top row
+        pocket(35, 15, 15).move(25, yTop, z - 15),
+        // middle row
+        pocket(45, 15, 50).move(0, yMiddle, z - 50),
+        pocket(20, 15, 25).move(83, yMiddle, z - 25),
+        (pocket(20, 15, 40) + Cylinder(15, 50).moveZ(-10)).move(132, yMiddle + 25, z - 40),
+        pocket(1, 15, 40).move(181, yMiddle, z - 40),
+        pocket(45, 15, 20).move(220, yMiddle, z - 20),
+        // bottom row
+        pocket(35, 15, 22).move(0, yBottom, z2 - 22),
+        pocket2(20, 15, 20).move(73, yBottom, z2 - 20),
+        pocket(20, 15, 20).move(131, yBottom, z2 - 20),
+        pocket2(1, 15, 25).move(188, yBottom, z2 - 25),
+        pocket(40, 15, 15).move(227, yBottom, z2 - 15)
+      )
+    def side0(e: TopoDS_Edge) = {
+      val p = e.point(0.5)
+      if (p.x == x && p.y < y && e.tangent().dot(Vector(0,0,1, Millimeters)).abs == Millimeters(1) * Millimeters(1)) {
+        Some(Millimeters(15))
+      } else {
+        None
+      }
+    }
+    def side1(e: TopoDS_Edge) = {
+      val p = e.point(0.5)
+      if (p.x == x && p.y < y && p.z > 0 && e.tangent().dot(Vector(0,0,1, Millimeters)).abs == Millimeters(0) * Millimeters(1)) {
+        Some(Millimeters(3))
+      } else {
+        None
+      }
+    }
+    def inBounds(e: TopoDS_Edge) = {
+      val p = e.point(0.5)
+      p.x > 0 && p.x < x && p.y > 0 && p.y < y && (p.z == z || p.z == z2)
+    }
+    val filleted0 = Fillet(base, side0(_)) // big side rounds
+    val filleted1 = Fillet(filleted0, side1(_)) // side edges
+    val filleted2 = Fillet(filleted1, 3, inBounds(_)) // pocket edges
+    val done = filleted2 - slopes
+    render(done, false)
+  }
+
 }
