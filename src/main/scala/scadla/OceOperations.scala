@@ -82,6 +82,13 @@ object Chamfer {
     Chamfer.face(s, (f: TopoDS_Face) => if (select(f)) Some(l) else None)
   }
 
+  def edge(s: Solid, select: TopoDS_Edge => Option[Length]): OceOperation = {
+    Chamfer(s, (f: TopoDS_Face, e: TopoDS_Edge) => select(e))
+  }
+  def edge(s: Solid, l: Length, select: TopoDS_Edge => Boolean): OceOperation = {
+    Chamfer(s, (f: TopoDS_Face, e: TopoDS_Edge) => if (select(e)) Some(l) else None)
+  }
+
 }
 
 object ThickSolid {

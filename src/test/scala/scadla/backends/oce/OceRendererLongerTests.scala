@@ -11,6 +11,8 @@ import squants.space.{Angle, Length, Degrees, Millimeters, SquareCentimeters}
 import scadla.EverythingIsIn.{millimeters, radians}
 import org.jcae.opencascade.jni._
 
+// some dogfooding
+
 class OceRendererLongerTest extends FunSuite {
 
   test("a more complex example 1") {
@@ -174,7 +176,7 @@ class OceRendererLongerTest extends FunSuite {
     val screwRadius = 1.4
     val size = 21.3
     val delta = screwRadius + 0.1
-    val roundedCube = Fillet(Cube(size,size,size+1), 2.5, edge => edge.tangent().toUnitVector.dot(Vector.z) == 1*Millimeters(1))
+    val roundedCube = roundedCubeXY(size,size,size+1, 2.5)
     val s = Cylinder(screwRadius, size+2).moveZ(-size/2-1)
     val ls2 = Union(
         l1,
@@ -190,6 +192,47 @@ class OceRendererLongerTest extends FunSuite {
     render(otherSide + otherSide.mirror(1, 0, 0).moveX(-5), false)
   }
 
+  test("a more complex example 4") {
+    val rodRadius: Length = 4
+    val pillarSide: Length = 70
+    val α = Degrees(50)
+    val β = Degrees(-10)
+    val rods = {
+      val r = Cylinder(rodRadius, pillarSide).moveZ(rodRadius).rotateY(Degrees(90))
+      val rs = r.rotateZ(α) + r.rotateZ(β).moveY(-rodRadius)
+      rs + rs.mirror(1,0,0)
+    }
+    val side = pillarSide + 10
+    val base = Difference(
+      roundedCubeXY(side, side, 40, 3).move(-side/2, -side/2, 0),
+      roundedCubeXY(pillarSide, pillarSide, 50, 3).move(-pillarSide/2, -pillarSide/2, 12),
+      rods.moveZ(2+rodRadius)
+    )
+    val h: Length = 3
+    def findEdge(e: TopoDS_Edge): Boolean = {
+      val k = e.kind == GeomAbs_CurveType.GeomAbs_Line
+      val p = parallel(e.tangent(), Vector.z)
+      val x = ( (e.start.x.to(Millimeters) - 5).abs <= 1e-5 ||
+                (e.start.x.to(Millimeters) + 5).abs <= 1e-5 )
+      k && p && x
+    }
+    val screwStuff = {
+      val base = Cube(10, 20, h).move(-5,-20,0) + Cube(20, 5, h).move(-10,-25,0) + Cylinder(6, h) - Cylinder(2, h)
+      val chamfered = Chamfer.edge(base, 2, e => e.kind == GeomAbs_CurveType.GeomAbs_Circle && (e.start.asPoint - Point(0,0,0)).norm == Millimeters(2))
+      val filleted = Fillet(chamfered, 4, findEdge)
+      filleted.moveY(20).rotateX(Degrees(90))
+    }
+    val obj = base ++ (0 to 3).map( i => screwStuff.move(0, pillarSide/2 + h, 40).rotateZ(Degrees(90)*i) )
+    render(obj, false)
+    val pad = {
+      val body = Fillet(Cylinder(10, 20), 5, e => e.kind == GeomAbs_CurveType.GeomAbs_Circle)
+      val oridented = body.rotateX(Degrees(90)).moveZ(2)
+      val cut = oridented * CenteredCube.xy(50, 50, 50)
+      cut - Cylinder(rodRadius, 15).rotateX(Degrees(90)).moveZ(rodRadius + 2)
+    }
+    render(pad, false)
+  }
+  
   test("hangboard"){
     val x = Millimeters(290)
     val y = Millimeters(160)
