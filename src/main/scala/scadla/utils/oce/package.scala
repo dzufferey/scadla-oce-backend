@@ -65,14 +65,14 @@ package object oce {
   }
 
   def hasGeometry(shape: TopoDS_Shape) = shape.shapeType match {
-    case TopAbs_ShapeEnum.EDGE | 
+    case TopAbs_ShapeEnum.EDGE |
          TopAbs_ShapeEnum.WIRE |
          TopAbs_ShapeEnum.FACE => true
     case _ => false
   }
 
   def toPoint(p: Array[Double], unit: LengthUnit) = Point(unit(p(0)), unit(p(1)), unit(p(2)))
-  
+
   def toVector(p: Array[Double], unit: LengthUnit) = Vector(p(0), p(1), p(2), unit)
 
   def connectedAndSameDirection(c1: Adaptor3d_Curve, c2: Adaptor3d_Curve, toleranceP: Double = 1e-7, toleranceD: Double = 1e-1) = {
@@ -96,7 +96,7 @@ package object oce {
     if (!edges.hasNext) {
       return false
     }
-    val first = edges.next
+    val first = edges.next()
     val firstAdaptor = new BRepAdaptor_Curve(first)
     if (first.isDegenerate || !atLeastC1(firstAdaptor.continuity)) {
       return false
@@ -107,7 +107,7 @@ package object oce {
     while (edges.hasNext) {
       val previous = current
       val previousAdaptor = currentAdaptor
-      current = edges.next
+      current = edges.next()
       currentAdaptor = new BRepAdaptor_Curve(current)
       if (current.isDegenerate || !atLeastC1(currentAdaptor.continuity)) {
         return false

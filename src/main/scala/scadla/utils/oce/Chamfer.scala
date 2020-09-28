@@ -29,7 +29,7 @@ class Chamfer(solid: TopoDS_Shape, unit: LengthUnit = Millimeters) {
 }
 
 object Chamfer {
-  
+
   def apply(solid: TopoDS_Shape, filter: (TopoDS_Face, TopoDS_Edge) => Option[Length], unit: LengthUnit = Millimeters) = {
     val mf = new Chamfer(solid, unit)
     for (f <- TopoExplorerUnique.faces(solid);
@@ -50,7 +50,7 @@ object Chamfer {
     }
     mf.result
   }
-  
+
   def face(solid: TopoDS_Shape, filter: TopoDS_Face => Option[Length], unit: LengthUnit = Millimeters) = {
     val mf = new Chamfer(solid, unit)
     for (f <- TopoExplorerUnique.faces(solid);

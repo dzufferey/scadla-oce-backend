@@ -8,7 +8,7 @@ object TopoExplorerUnique {
   def iterator(shape: TopoDS_Shape) = {
     if (shape == null) {
       new Iterator[TopoDS_Shape] {
-        def next = null
+        def next() = null
         def hasNext = false
       }
     } else {
@@ -16,17 +16,17 @@ object TopoExplorerUnique {
         protected val it = new TopoDS_Iterator(shape)
         protected val seen = new HashSet[TopoDS_Shape]()
         protected var nextElement: TopoDS_Shape = null
-        protected def findNext {
+        protected def findNext = {
           while (nextElement == null && it.more()) {
             val v = it.value
-            it.next
+            it.next()
             if (!seen(v)) {
               seen += v
               nextElement = v
             }
           }
         }
-        def next = {
+        def next() = {
           val v = nextElement
           findNext
           v
@@ -42,17 +42,17 @@ object TopoExplorerUnique {
     protected val it = if (shape != null) new TopExp_Explorer(shape, kind) else null
     protected val seen = new HashSet[T]()
     protected var nextElement: Option[T] = None
-    protected def findNext {
+    protected def findNext = {
       while (nextElement.isEmpty && it.more()) {
         val v = it.current.asInstanceOf[T]
-        it.next
+        it.next()
         if (!seen(v)) {
           seen += v
           nextElement = Some(v)
         }
       }
     }
-    def next = {
+    def next() = {
       val v = nextElement.get
       nextElement = None
       findNext

@@ -48,7 +48,7 @@ abstract class Sweep(shape: TopoDS_Shape, point: Point, normal: Vector, unit: Le
     val solids = shapes.flatMap(_.solids)
     var acc: TopoDS_Shape = null
     while (solids.hasNext) {
-      var n = solids.next
+      var n = solids.next()
       if (n.isValid) {
         val vol = n.asInstanceOf[TopoDS_Solid].volume(volumeUnit)
         Logger("scadla.utils.oce.Sweep", Debug, "solid with volume "+vol)

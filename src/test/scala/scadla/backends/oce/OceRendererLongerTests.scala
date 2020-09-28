@@ -6,14 +6,14 @@ import scadla.backends.Viewer
 import scadla.utils.{CenteredCube, Trapezoid}
 import scadla.utils.oce.ExtendedOps._
 import scadla.utils.oce.{Fillet => _, Chamfer => _, Offset => _, _}
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 import squants.space.{Angle, Length, Degrees, Millimeters, SquareCentimeters}
 import scadla.EverythingIsIn.{millimeters, radians}
 import org.jcae.opencascade.jni._
 
 // some dogfooding
 
-class OceRendererLongerTest extends FunSuite {
+class OceRendererLongerTest extends AnyFunSuite {
 
   test("a more complex example 1") {
     implicit val tolerance = Millimeters(1e-3)
@@ -136,7 +136,7 @@ class OceRendererLongerTest extends FunSuite {
     )
     render(tree2, false)
   }
-  
+
   test("a more complex example 3") {
     import scadla.utils.extrusion._
     val alpha: Angle = Degrees(15)
@@ -230,7 +230,7 @@ class OceRendererLongerTest extends FunSuite {
       val cut = oridented * CenteredCube.xy(50, 50, 50)
       cut - Cylinder(rodRadius, 15).rotateX(Degrees(90)).moveZ(rodRadius + 2)
     }
-    render(pad, true)
+    render(pad, false)
   }
 
 }

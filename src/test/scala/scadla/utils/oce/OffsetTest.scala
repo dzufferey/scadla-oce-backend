@@ -5,14 +5,14 @@ import scadla.backends.Viewer
 import scadla.backends.oce.OceRenderer
 import scadla.utils.CenteredCube
 import org.jcae.opencascade.jni._
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 import squants.space.Length
 import scala.language.postfixOps
 import squants.space.LengthConversions._
 import scadla.EverythingIsIn.{millimeters, radians}
 import ExtendedOps._
   
-class OffsetTest extends FunSuite {
+class OffsetTest extends AnyFunSuite {
   
   test("test 00") {
     val tree = scadla.Offset(0.0, Union(

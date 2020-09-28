@@ -1,10 +1,10 @@
 package scadla.utils.oce
 
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 import org.jcae.opencascade.jni._
 import scadla.OceTestCommon._
 
-class TopoExplorerTest extends FunSuite {
+class TopoExplorerTest extends AnyFunSuite {
 
   test("vertices in a cube") {
     val c = getCube()

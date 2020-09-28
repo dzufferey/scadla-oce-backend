@@ -5,12 +5,12 @@ import scadla.backends.Viewer
 import scadla.backends.oce.OceRenderer
 import org.jcae.opencascade.jni._
 import org.jcae.opencascade.Utilities
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 import scadla.EverythingIsIn.{millimeters, radians}
 import squants.space.Millimeters
 import ExtendedOps._
 
-class SliceTest extends FunSuite {
+class SliceTest extends AnyFunSuite {
   
   test("test 01") {
     val tree = Cube(1,1,1)

@@ -92,7 +92,7 @@ object Chamfer {
 }
 
 object ThickSolid {
-  
+
   def apply(s: Solid, l: Length, toRemove: TopoDS_Shape => Iterable[TopoDS_Face]): OceOperation = {
     OceOperation(s, (shape, unit) => {
       val mf = new utils.oce.ThickSolid(shape, l, unit)
@@ -100,7 +100,7 @@ object ThickSolid {
       mf.result
     })
   }
-  
+
   def face(s: Solid, l: Length, toRemove: TopoDS_Face => Boolean): OceOperation = {
     OceOperation(s, (shape, unit) => {
       val mf = new utils.oce.ThickSolid(shape, l, unit)
@@ -155,7 +155,7 @@ object LinearExtrude {
     val u = x.unit
     apply(Vector(x to u, y to u, z to u, u), s)
   }
-  
+
   def apply(direction: Vector, s: Solid): OceOperation = {
     val zero = direction.unit(0)
     apply(Point(zero, zero, zero), direction, s)

@@ -40,7 +40,7 @@ object ExtendedOps {
       val p = BRep_Tool.pnt(lhs)
       Millimeters(p(1))
     }
-    
+
     def z: Length = {
       val p = BRep_Tool.pnt(lhs)
       Millimeters(p(2))
@@ -94,18 +94,18 @@ object ExtendedOps {
       new BRepAdaptor_Curve(lhs).getType
     }
 
-    def start = allChildren.next
+    def start = allChildren.next()
 
     def end = {
       val it = allChildren
-      it.next
-      it.next
+      it.next()
+      it.next()
     }
 
     def extremities = {
       val it = allChildren
-      val s = it.next
-      val e = it.next
+      val s = it.next()
+      val e = it.next()
       (s,e)
     }
 
@@ -345,6 +345,6 @@ object ExtendedOps {
 
   import scala.language.implicitConversions
 
-  implicit def shapeIterator2Iterable[A <: TopoDS_Shape](it: Iterator[A]): Iterable[A] = it.toIterable
+  implicit def shapeIterator2Iterable[A <: TopoDS_Shape](it: Iterator[A]): Iterable[A] = it.to(Iterable)
 
 }

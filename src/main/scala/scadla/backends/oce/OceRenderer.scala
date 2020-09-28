@@ -261,7 +261,7 @@ class OceRenderer(unit: LengthUnit = Millimeters, onError: ErrorPolicy = keepOld
       val builder = Seq.newBuilder[Face]
       val explorer = shape.faces
       while(explorer.hasNext) {
-        val face = explorer.next
+        val face = explorer.next()
         val loc = new TopLoc_Location
         val tri = BRep_Tool.triangulation(face, loc)
         val nodes = tri.nodes
@@ -297,11 +297,11 @@ class OceRenderer(unit: LengthUnit = Millimeters, onError: ErrorPolicy = keepOld
           i += 1
         }
       }
-      Polyhedron(builder.result)
+      Polyhedron(builder.result())
     }
   }
 
-  def toSTEP(obj: TopoDS_Shape, outputFile: String) {
+  def toSTEP(obj: TopoDS_Shape, outputFile: String): Unit = {
     //https://dev.opencascade.org/doc/overview/html/occt_user_guides__step.html#occt_step_3
     assert(unit == Millimeters, "only MM supported for the moment, TODO support more (write.step.unit)")
     val writer = new STEPControl_Writer()
@@ -309,7 +309,7 @@ class OceRenderer(unit: LengthUnit = Millimeters, onError: ErrorPolicy = keepOld
     writer.write(outputFile)
   }
 
-  def toIGES(obj: TopoDS_Shape, outputFile: String) {
+  def toIGES(obj: TopoDS_Shape, outputFile: String): Unit = {
     //https://dev.opencascade.org/doc/overview/html/occt_user_guides__iges.html#occt_iges_3
     new IGESControl_Controller().init()
     val unitStr = unit match {
@@ -330,19 +330,19 @@ class OceRenderer(unit: LengthUnit = Millimeters, onError: ErrorPolicy = keepOld
     writer.write(outputFile)
   }
 
-  def toBREP(obj: TopoDS_Shape, outputFile: String) {
+  def toBREP(obj: TopoDS_Shape, outputFile: String): Unit = {
     BRepTools.write(obj, outputFile)
   }
 
-  def toSTEP(obj: Solid, outputFile: String) {
+  def toSTEP(obj: Solid, outputFile: String): Unit = {
     toSTEP(render(obj), outputFile)
   }
 
-  def toIGES(obj: Solid, outputFile: String) {
+  def toIGES(obj: Solid, outputFile: String): Unit = {
     toIGES(render(obj), outputFile)
   }
 
-  def toBREP(obj: Solid, outputFile: String) {
+  def toBREP(obj: Solid, outputFile: String): Unit = {
     toBREP(render(obj), outputFile)
   }
 

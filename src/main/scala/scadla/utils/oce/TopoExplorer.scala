@@ -7,15 +7,15 @@ object TopoExplorer {
   def iterator(shape: TopoDS_Shape) = {
     if (shape == null) {
       new Iterator[TopoDS_Shape] {
-        def next = null
+        def next() = null
         def hasNext = false
       }
     } else {
       new Iterator[TopoDS_Shape] {
         protected val it = new TopoDS_Iterator(shape)
-        def next = {
+        def next() = {
           val v = it.value
-          it.next
+          it.next()
           v
         }
         def hasNext = it.more()
@@ -25,9 +25,9 @@ object TopoExplorer {
 
   private class TopoIterator[T <: TopoDS_Shape](shape: TopoDS_Shape, kind: TopAbs_ShapeEnum) extends Iterator[T] {
     protected val it = if (shape != null) new TopExp_Explorer(shape, kind) else null
-    def next = {
+    def next() = {
       val v = it.current.asInstanceOf[T]
-      it.next
+      it.next()
       v
     }
     def hasNext = it != null && it.more

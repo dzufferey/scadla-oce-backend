@@ -5,12 +5,12 @@ import scadla.InlineOps._
 import scadla.utils.{CenteredCube, Trapezoid}
 import scadla.utils.oce.ExtendedOps._
 import scadla.utils.oce.{Fillet => _, Chamfer => _, Offset => _, _}
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 import squants.space.{Angle, Length, Degrees, Millimeters, SquareCentimeters}
 import scadla.EverythingIsIn.{millimeters, radians}
 import org.jcae.opencascade.jni._
 
-class OceRendererTest extends FunSuite {
+class OceRendererTest extends AnyFunSuite {
 
   test("rendering a cube") {
     val r = new OceRenderer
@@ -62,8 +62,8 @@ class OceRendererTest extends FunSuite {
         def checkAngles(e: TopoDS_Edge) = {
           implicit val tolerance: Length = 1e-3
           val fs = e.adjacentFacesIn(s)
-          val n1 = fs.next.normal()
-          val f2 = fs.next
+          val n1 = fs.next().normal()
+          val f2 = fs.next()
           assert(!fs.hasNext)
           val p1 = e.start.asPoint + n1
           f2.pointOnFace(p1)

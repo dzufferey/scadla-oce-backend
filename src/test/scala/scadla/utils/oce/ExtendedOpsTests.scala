@@ -1,6 +1,6 @@
 package scadla.utils.oce
 
-import org.scalatest._
+import org.scalatest.funsuite.AnyFunSuite
 import scadla._
 import org.jcae.opencascade.jni._
 import ExtendedOps._
@@ -10,7 +10,7 @@ import squants.space.LengthConversions._
 import scadla.EverythingIsIn.{millimeters, radians}
 import OceTestCommon._
 
-class ExtendedOpsTest extends FunSuite {
+class ExtendedOpsTest extends AnyFunSuite {
 
   test("vertex and points") {
     assert(getVertex(1,2,3).x == (1 mm))
